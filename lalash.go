@@ -17,7 +17,7 @@ func Eval(env Env, expr string, ctx context.Context) error {
 	// parce
 	argv := strings.Split(expr, " ")
 
-	// eval
+	// exec
 	cmd := exec.Command(argv[0], argv[1:]...)
 	cmd.Stdout = env.Out
 	cmd.Stderr = env.Err
