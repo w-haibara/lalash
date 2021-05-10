@@ -1,8 +1,9 @@
 package main
 
 import (
-	"lalash/cli"
 	"os"
+
+	"lalash/cli"
 )
 
 func main() {
