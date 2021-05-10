@@ -1,5 +1,6 @@
-lalash: *.go cmd/lalash/*.go cli/*.go
+lalash: *.go cmd/lalash/*.go cli/*.go go.mod
 	gofmt -w *.go cmd/lalash/*.go cli/*.go
+	go mod tidy
 	go build ./cmd/...
 
 .PHONY: init
