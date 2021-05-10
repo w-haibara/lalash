@@ -5,8 +5,6 @@ import (
 	"io"
 	"os/exec"
 	"strings"
-
-	"github.com/creack/pty"
 )
 
 type Env struct {
@@ -35,21 +33,9 @@ func (e Env) parce(expr string) ([]string, error) {
 func (e Env) exec(ctx context.Context, args string, argv ...string) error {
 	cmd := exec.CommandContext(ctx, args, argv...)
 
-	ptmx, err := pty.Start(cmd)
-	if err != nil {
-		return err
-	}
-	defer ptmx.Close()
+	cmd.Stdin = e.In
+	cmd.Stdout = e.Out
+	cmd.Stderr = e.Err
 
-	go func() {
-		if _, err = io.Copy(ptmx, e.In); err != nil {
-			panic(err.Error)
-		}
-	}()
-
-	if _, err = io.Copy(e.Out, ptmx); err != nil {
-		return err
-	}
-
-	return nil
+	return cmd.Run()
 }
