@@ -40,7 +40,7 @@ func Run() int {
 		}
 		line.AppendHistory(expr)
 
-		if err := lalash.Eval(env, expr, ctx); err != nil {
+		if err := env.Eval(ctx, expr); err != nil {
 			log.Println("[eval error]", err.Error())
 			return exitCodeErr
 		}

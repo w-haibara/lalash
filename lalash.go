@@ -13,13 +13,13 @@ type Env struct {
 	Err io.Writer
 }
 
-func Eval(env Env, expr string, ctx context.Context) error {
+func (e Env) Eval(ctx context.Context, expr string) error {
 	// parce
 	argv := strings.Split(expr, " ")
 
 	// exec
-	cmd := exec.Command(argv[0], argv[1:]...)
-	cmd.Stdout = env.Out
-	cmd.Stderr = env.Err
+	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
+	cmd.Stdout = e.Out
+	cmd.Stderr = e.Err
 	return cmd.Run()
 }
