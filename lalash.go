@@ -13,24 +13,11 @@ type Env struct {
 	Err io.Writer
 }
 
-func (e Env) Eval(ctx context.Context, expr string) error {
-	argv, err := e.parce(expr)
-	if err != nil {
-		return err
-	}
-
-	if err := e.exec(ctx, argv[0], argv[1:]...); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (e Env) parce(expr string) ([]string, error) {
+func (e Env) Parse(expr string) ([]string, error) {
 	return strings.Split(expr, " "), nil
 }
 
-func (e Env) exec(ctx context.Context, args string, argv ...string) error {
+func (e Env) Exec(ctx context.Context, args string, argv ...string) error {
 	cmd := exec.CommandContext(ctx, args, argv...)
 
 	cmd.Stdin = e.In

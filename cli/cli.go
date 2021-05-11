@@ -40,10 +40,20 @@ func Run() int {
 		}
 		line.AppendHistory(expr)
 
-		if err := env.Eval(ctx, expr); err != nil {
-			log.Println("[eval error]", err.Error())
+		argv, err := env.Parse(expr)
+		if err != nil {
+			log.Println("[parse error]", err)
 			return exitCodeErr
 		}
 
+		if len(argv) == 0 {
+			log.Println("[argv legth is zero]")
+			return exitCodeErr
+		}
+
+		if err := env.Exec(ctx, argv[0], argv[1:]...); err != nil {
+			log.Println("[exec error]", err)
+			return exitCodeErr
+		}
 	}
 }
