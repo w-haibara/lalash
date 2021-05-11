@@ -46,9 +46,8 @@ func Run() int {
 			return exitCodeErr
 		}
 
-		if len(argv) == 0 {
-			log.Println("[argv legth is zero]")
-			return exitCodeErr
+		if argv == nil || argv[0] == "" {
+			continue
 		}
 
 		if err := env.Exec(ctx, argv[0], argv[1:]...); err != nil {
