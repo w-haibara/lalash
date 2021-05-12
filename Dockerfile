@@ -4,8 +4,8 @@ COPY . /lalash
 RUN make
 
 FROM ubuntu
-COPY --from=builder /lalash /lalash
-RUN useradd -ms /lalash/lalash alice
+COPY --from=builder /lalash/lalash /bin
+RUN useradd -ms /bin/lalash alice
 USER alice
 WORKDIR /home/alice
-CMD /lalash/lalash
+CMD /bin/lalash
