@@ -12,3 +12,8 @@ init:
 test:
 	gofmt -w *.go cmd/lalash/*.go cli/*.go
 	go test -v ./...
+
+.PHONY: docker
+docker:
+	docker build -t lalash .
+	docker run --rm -it lalash
