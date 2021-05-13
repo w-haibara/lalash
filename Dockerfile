@@ -1,4 +1,4 @@
-FROM golang:1.8 as builder
+FROM golang as builder
 WORKDIR /lalash
 COPY . /lalash
 RUN make

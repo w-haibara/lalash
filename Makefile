@@ -1,7 +1,9 @@
-lalash: *.go cmd/lalash/*.go cli/*.go go.mod
-	gofmt -w *.go cmd/lalash/*.go cli/*.go
+list := *.go
+
+lalash: $(list) go.mod
+	gofmt -w $(list)
 	go mod tidy
-	go build ./cmd/...
+	go build ./...
 
 .PHONY: init
 init:
@@ -10,7 +12,7 @@ init:
 
 .PHONY: test
 test:
-	gofmt -w *.go cmd/lalash/*.go cli/*.go
+	gofmt -w $(list)
 	go test -v ./...
 
 .PHONY: docker

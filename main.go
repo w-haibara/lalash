@@ -1,29 +1,39 @@
-package cli
+package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"os"
+	"os/exec"
+	"strings"
 
-	"lalash"
+	"lalash/history"
 
 	"github.com/peterh/liner"
 )
 
 const (
-	history    historyFileName = ".lalash_history"
-	exitCodeOK                 = iota
+	historyFileName = ".lalash_history"
+	exitCodeOK      = iota
 	exitCodeErr
 )
+
+func main() {
+	os.Exit(Run())
+}
 
 func Run() int {
 	line := liner.NewLiner()
 	defer line.Close()
-	line.SetCtrlCAborts(true)
-	history.readHistory(line)
-	defer history.writeHistory(line)
 
-	env := lalash.Env{
+	line.SetCtrlCAborts(true)
+
+	history := history.New(historyFileName)
+	history.ReadHistory(line)
+	defer history.WriteHistory(line)
+
+	env := Env{
 		In:  os.Stdin,
 		Out: os.Stdout,
 		Err: os.Stderr,
@@ -55,4 +65,22 @@ func Run() int {
 			return exitCodeErr
 		}
 	}
+}
+
+type Env struct {
+	In  io.Reader
+	Out io.Writer
+	Err io.Writer
+}
+
+func (e Env) Parse(expr string) ([]string, error) {
+	return strings.Split(expr, " "), nil
+}
+
+func (e Env) Exec(ctx context.Context, args string, argv ...string) error {
+	cmd := exec.CommandContext(ctx, args, argv...)
+	cmd.Stdin = e.In
+	cmd.Stdout = e.Out
+	cmd.Stderr = e.Err
+	return cmd.Run()
 }
