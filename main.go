@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"io"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
 
+	"lalash/command"
+	"lalash/env"
 	"lalash/history"
 
 	"github.com/peterh/liner"
@@ -33,11 +34,13 @@ func Run() int {
 	history.ReadHistory(line)
 	defer history.WriteHistory(line)
 
-	env := Env{
+	env := env.Env{
 		In:  os.Stdin,
 		Out: os.Stdout,
 		Err: os.Stderr,
 	}
+
+	cmd := command.New()
 
 	for {
 		ctx, cancel := context.WithCancel(context.Background())
@@ -50,7 +53,7 @@ func Run() int {
 		}
 		line.AppendHistory(expr)
 
-		argv, err := env.Parse(expr)
+		argv, err := Parse(expr)
 		if err != nil {
 			log.Println("[parse error]", err)
 			return exitCodeErr
@@ -60,24 +63,25 @@ func Run() int {
 			continue
 		}
 
-		if err := env.Exec(ctx, argv[0], argv[1:]...); err != nil {
+		if fn, ok := cmd[argv[0]]; ok {
+			if err := fn(env, argv[0], argv[1:]...); err != nil {
+				log.Println("[internal exec error]", err)
+			}
+			continue
+		}
+
+		if err := Exec(env, ctx, argv[0], argv[1:]...); err != nil {
 			log.Println("[exec error]", err)
 			continue
 		}
 	}
 }
 
-type Env struct {
-	In  io.Reader
-	Out io.Writer
-	Err io.Writer
-}
-
-func (e Env) Parse(expr string) ([]string, error) {
+func Parse(expr string) ([]string, error) {
 	return strings.Split(expr, " "), nil
 }
 
-func (e Env) Exec(ctx context.Context, args string, argv ...string) error {
+func Exec(e env.Env, ctx context.Context, args string, argv ...string) error {
 	cmd := exec.CommandContext(ctx, args, argv...)
 	cmd.Stdin = e.In
 	cmd.Stdout = e.Out
