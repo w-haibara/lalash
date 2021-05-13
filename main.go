@@ -4,12 +4,12 @@ import (
 	"context"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 
 	"lalash/command"
 	"lalash/env"
 	"lalash/history"
+	"lalash/process"
 
 	"github.com/peterh/liner"
 )
@@ -70,7 +70,7 @@ func Run() int {
 			continue
 		}
 
-		if err := Exec(env, ctx, argv[0], argv[1:]...); err != nil {
+		if err := process.Exec(env, ctx, argv[0], argv[1:]...); err != nil {
 			log.Println("[exec error]", err)
 			continue
 		}
@@ -79,12 +79,4 @@ func Run() int {
 
 func Parse(expr string) ([]string, error) {
 	return strings.Split(expr, " "), nil
-}
-
-func Exec(e env.Env, ctx context.Context, args string, argv ...string) error {
-	cmd := exec.CommandContext(ctx, args, argv...)
-	cmd.Stdin = e.In
-	cmd.Stdout = e.Out
-	cmd.Stderr = e.Err
-	return cmd.Run()
 }
