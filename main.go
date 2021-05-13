@@ -61,7 +61,7 @@ func Run() int {
 		}
 
 		if err := env.Exec(ctx, argv[0], argv[1:]...); err != nil {
-			log.Println("[lalash]", err)
+			log.Println("[exec error]", err)
 			continue
 		}
 	}
