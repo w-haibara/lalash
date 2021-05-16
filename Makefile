@@ -5,6 +5,12 @@ lalash: $(list) go.mod
 	go mod tidy
 	go build -o lalash 
 
+.PHONY: run
+run:
+	gofmt -w $(list)
+	go mod tidy
+	go run $(list)
+
 .PHONY: init
 init:
 	go mod init lalash
