@@ -55,7 +55,6 @@ func Run() int {
 		argv, err := Parse(expr)
 		if err != nil {
 			log.Println("[parse error]", err)
-			return exitCodeErr
 		}
 
 		if argv == nil || len(argv) == 0 || argv[0] == "" {
