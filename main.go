@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"lalash/command"
+	"lalash/commands"
 	"lalash/env"
 	"lalash/history"
 	"lalash/process"
@@ -39,7 +39,7 @@ func Run() int {
 		Err: os.Stderr,
 	}
 
-	cmd := command.New()
+	cmds := commands.New()
 
 	for {
 		ctx, cancel := context.WithCancel(context.Background())
@@ -62,8 +62,8 @@ func Run() int {
 			continue
 		}
 
-		if fn, ok := cmd[argv[0]]; ok {
-			if err := fn(env, argv[0], argv[1:]...); err != nil {
+		if cmd, ok := cmds[argv[0]]; ok {
+			if err := cmd(env, argv[0], argv[1:]...); err != nil {
 				log.Println("[internal exec error]", err)
 			}
 			continue
