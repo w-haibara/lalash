@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"text/scanner"
 )
@@ -29,7 +28,6 @@ func Parse(expr string) ([]string, error) {
 		ret = append(ret, s.TokenText())
 	}
 	for i, v := range ret {
-		fmt.Println(i, v)
 		if strings.HasPrefix(v, "\"") && strings.HasSuffix(v, "\"") {
 			ret[i] = strings.TrimPrefix(v, "\"")
 			ret[i] = strings.TrimSuffix(ret[i], "\"")
