@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"strings"
 
 	"lalash/command"
 	"lalash/env"
@@ -59,7 +58,7 @@ func Run() int {
 			return exitCodeErr
 		}
 
-		if argv == nil || argv[0] == "" {
+		if argv == nil || len(argv) == 0 || argv[0] == "" {
 			continue
 		}
 
@@ -75,8 +74,4 @@ func Run() int {
 			continue
 		}
 	}
-}
-
-func Parse(expr string) ([]string, error) {
-	return strings.Split(expr, " "), nil
 }
