@@ -20,16 +20,23 @@ func Parse(expr string) ([]string, error) {
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
 		if s.TokenText() == " " {
 			tmp := ""
-			if s.Peek() == ' ' {
-				continue
+			for {
+				tok := s.Peek()
+				if tok == ' ' {
+					s.Scan()
+					continue
+				}
+				break
 			}
-			for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
-				tmp += s.TokenText()
-				if s.Peek() == ' ' {
+			for {
+				tok := s.Peek()
+				if tok == ' ' || tok == scanner.EOF {
 					break
 				}
+				s.Scan()
+				tmp += s.TokenText()
 			}
-			if tmp == " " {
+			if tmp == "" {
 				continue
 			}
 			ret = append(ret, tmp)
