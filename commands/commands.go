@@ -34,6 +34,17 @@ func New() InternalCmdMap {
 		},
 	})
 
+	m.Store("help", InternalCmd{
+		Usage: "help",
+		Fn: func(e env.Env, args string, argv ...string) error {
+			m.Range(func(key ,value interface{}) bool {
+				fmt.Fprintln(e.Out, key, ":", value.(InternalCmd).Usage)
+				return true
+			})
+			return nil
+		},
+	})
+
 	return InternalCmdMap(m)
 }
 
