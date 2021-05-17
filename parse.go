@@ -20,6 +20,9 @@ func Parse(expr string) ([]string, error) {
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
 		if s.TokenText() == " " {
 			tmp := ""
+			if s.Peek() == ' ' {
+				continue
+			}
 			for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
 				tmp += s.TokenText()
 				if s.Peek() == ' ' {
