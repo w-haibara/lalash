@@ -27,8 +27,8 @@ func (fn HistoryFileName) WriteHistory(line *liner.State) error {
 	f, err := os.Create(filepath.Join(os.TempDir(), string(fn)))
 	if err != nil {
 		return err
-	} 
-		line.WriteHistory(f)
-		f.Close()
+	}
+	line.WriteHistory(f)
+	f.Close()
 	return nil
 }
