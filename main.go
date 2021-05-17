@@ -61,8 +61,8 @@ func Run() int {
 			continue
 		}
 
-		if cmd, ok := cmds[argv[0]]; ok {
-			if err := cmd(env, argv[0], argv[1:]...); err != nil {
+		if cmd, err := cmds.Get(argv[0]); err == nil {
+			if err := cmd.Fn(env, argv[0], argv[1:]...); err != nil {
 				log.Println("[internal exec error]", err)
 			}
 			continue
