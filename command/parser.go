@@ -27,7 +27,29 @@ func Parse(expr string) ([]Token, error) {
 		errs = append(errs, fmt.Sprintf("%s %s", s.Pos(), msg))
 	}
 
+	first := true
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
+		if first {
+			first = false
+			tmp := s.TokenText()
+			for {
+				tok := s.Peek()
+				if tok == ' ' || tok == scanner.EOF {
+					break
+				}
+				s.Scan()
+				tmp += s.TokenText()
+			}
+			if tmp == "" {
+				continue
+			}
+			ret = append(ret, Token{
+				Kind: StringToken,
+				Val:  tmp,
+			})
+			continue
+		}
+
 		if s.TokenText() == " " {
 			tmp := ""
 			for {
