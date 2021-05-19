@@ -44,16 +44,16 @@ func Run() int {
 		}
 		line.AppendHistory(expr)
 
-		argv, err := command.Parse(expr)
+		tokens, err := command.Parse(expr)
 		if err != nil {
 			log.Println("[parse error]", err)
 		}
 
-		if argv == nil || len(argv) == 0 || argv[0] == "" {
+		if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
 			continue
 		}
 
-		if err := cmd.Eval(ctx, argv); err != nil {
+		if err := cmd.Eval(ctx, tokens); err != nil {
 			log.Println("[eval error]", err)
 			continue
 		}

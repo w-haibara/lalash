@@ -6,7 +6,12 @@ import (
 	"os/exec"
 )
 
-func (c Command) Eval(ctx context.Context, argv []string) error {
+func (c Command) Eval(ctx context.Context, tokens []Token) error {
+	argv := []string{}
+	for _, v := range tokens {
+		argv = append(argv, v.Val)
+	}
+
 	if err := c.Exec(ctx, argv); err != nil {
 		return err
 	}

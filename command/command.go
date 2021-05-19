@@ -12,14 +12,14 @@ type Env struct {
 }
 
 type Command struct {
-	Env Env
+	Env      Env
 	Internal InternalCmdMap
 }
 
 func New() Command {
 	return Command{
 		Env: Env{
-			In: os.Stdin,
+			In:  os.Stdin,
 			Out: os.Stdout,
 			Err: os.Stderr,
 		},

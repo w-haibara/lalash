@@ -7,8 +7,17 @@ import (
 	"text/scanner"
 )
 
-func Parse(expr string) ([]string, error) {
-	ret := []string{}
+const (
+	StringToken = "string"
+)
+
+type Token struct {
+	Kind string
+	Val  string
+}
+
+func Parse(expr string) ([]Token, error) {
+	ret := []Token{}
 	errs := []string{}
 	var s scanner.Scanner
 	s.Init(strings.NewReader(expr))
@@ -39,10 +48,16 @@ func Parse(expr string) ([]string, error) {
 			if tmp == "" {
 				continue
 			}
-			ret = append(ret, tmp)
+			ret = append(ret, Token{
+				Kind: StringToken,
+				Val:  tmp,
+			})
 			continue
 		}
-		ret = append(ret, s.TokenText())
+		ret = append(ret, Token{
+			Kind: StringToken,
+			Val:  s.TokenText(),
+		})
 	}
 
 	if len(errs) > 0 {
@@ -50,10 +65,11 @@ func Parse(expr string) ([]string, error) {
 	}
 
 	for i, v := range ret {
-		if strings.HasPrefix(v, "\"") && strings.HasSuffix(v, "\"") {
-			ret[i] = strings.TrimPrefix(v, "\"")
-			ret[i] = strings.TrimSuffix(ret[i], "\"")
+		if strings.HasPrefix(v.Val, "\"") && strings.HasSuffix(v.Val, "\"") {
+			ret[i].Val = strings.TrimPrefix(v.Val, "\"")
+			ret[i].Val = strings.TrimSuffix(ret[i].Val, "\"")
 		}
 	}
+
 	return ret, nil
 }
