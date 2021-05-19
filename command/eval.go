@@ -55,6 +55,7 @@ func (c Command) Exec(ctx context.Context, argv []string) error {
 		if err := cmd.Fn(c.Env, argv[0], argv[1:]...); err != nil {
 			return fmt.Errorf("[internal exec error]", err)
 		}
+		return nil
 	}
 
 	if err := Exec(c.Env, ctx, argv[0], argv[1:]...); err != nil {
