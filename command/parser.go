@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	StringToken = "string"
+	StringToken       = "string"
+	SubstitutionToken = "substitution"
 )
 
 type Token struct {
@@ -68,6 +69,14 @@ func Parse(expr string) ([]Token, error) {
 		if strings.HasPrefix(v.Val, "\"") && strings.HasSuffix(v.Val, "\"") {
 			ret[i].Val = strings.TrimPrefix(v.Val, "\"")
 			ret[i].Val = strings.TrimSuffix(ret[i].Val, "\"")
+		}
+	}
+
+	for i, v := range ret {
+		if strings.HasPrefix(v.Val, "`") && strings.HasSuffix(v.Val, "`") {
+			ret[i].Val = strings.TrimPrefix(v.Val, "`")
+			ret[i].Val = strings.TrimSuffix(ret[i].Val, "`")
+			ret[i].Kind = SubstitutionToken
 		}
 	}
 

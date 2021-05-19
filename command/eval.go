@@ -1,15 +1,46 @@
 package command
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
 func (c Command) Eval(ctx context.Context, tokens []Token) error {
 	argv := []string{}
-	for _, v := range tokens {
-		argv = append(argv, v.Val)
+	for i, v := range tokens {
+		if v.Kind == SubstitutionToken {
+			res, err := func() (string, error) {
+				var b bytes.Buffer
+				c := c
+				c.Env.Out = bufio.NewWriter(&b)
+
+				tokens, err := Parse(v.Val)
+				if err != nil {
+					return "", fmt.Errorf("[parse error]", err)
+				}
+
+				if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
+					return "", nil
+				}
+
+				if err := c.Eval(ctx, tokens); err != nil {
+					return "", fmt.Errorf("[eval error]", err)
+				}
+
+				return strings.ReplaceAll(b.String(), "\n", " "), nil
+			}()
+			if err != nil {
+				return err
+			}
+
+			tokens[i].Val = res
+			tokens[i].Kind = StringToken
+		}
+		argv = append(argv, tokens[i].Val)
 	}
 
 	if err := c.Exec(ctx, argv); err != nil {
