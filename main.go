@@ -5,10 +5,8 @@ import (
 	"log"
 	"os"
 
-	"lalash/commands"
-	"lalash/env"
+	"lalash/command"
 	"lalash/history"
-	"lalash/process"
 
 	"github.com/peterh/liner"
 )
@@ -33,13 +31,7 @@ func Run() int {
 	history.ReadHistory(line)
 	defer history.WriteHistory(line)
 
-	env := env.Env{
-		In:  os.Stdin,
-		Out: os.Stdout,
-		Err: os.Stderr,
-	}
-
-	cmds := commands.New()
+	cmd := command.New()
 
 	for {
 		ctx, cancel := context.WithCancel(context.Background())
@@ -52,7 +44,7 @@ func Run() int {
 		}
 		line.AppendHistory(expr)
 
-		argv, err := Parse(expr)
+		argv, err := command.Parse(expr)
 		if err != nil {
 			log.Println("[parse error]", err)
 		}
@@ -61,15 +53,8 @@ func Run() int {
 			continue
 		}
 
-		if cmd, err := cmds.Get(argv[0]); err == nil {
-			if err := cmd.Fn(env, argv[0], argv[1:]...); err != nil {
-				log.Println("[internal exec error]", err)
-			}
-			continue
-		}
-
-		if err := process.Exec(env, ctx, argv[0], argv[1:]...); err != nil {
-			log.Println("[exec error]", err)
+		if err := cmd.Eval(ctx, argv); err != nil {
+			log.Println("[eval error]", err)
 			continue
 		}
 	}

@@ -1,43 +1,25 @@
-package commands
+package command
 
 import (
 	"fmt"
 	"reflect"
 	"sync"
-
-	"lalash/env"
 )
 
 type InternalCmd struct {
 	Usage string
-	Fn    func(env.Env, string, ...string) error
+	Fn    func(Env, string, ...string) error
 }
 
 type InternalCmdMap sync.Map
 
-func New() InternalCmdMap {
+func NewInternalCmdMap() InternalCmdMap {
 	var m sync.Map
-
-	m.Store("echo1", InternalCmd{
-		Usage: "this is echo1 command",
-		Fn: func(e env.Env, args string, argv ...string) error {
-			fmt.Println("1", argv)
-			return nil
-		},
-	})
-
-	m.Store("echo2", InternalCmd{
-		Usage: "this is echo2 command",
-		Fn: func(e env.Env, args string, argv ...string) error {
-			fmt.Println("2", argv)
-			return nil
-		},
-	})
 
 	m.Store("help", InternalCmd{
 		Usage: "help",
-		Fn: func(e env.Env, args string, argv ...string) error {
-			m.Range(func(key ,value interface{}) bool {
+		Fn: func(e Env, args string, argv ...string) error {
+			m.Range(func(key, value interface{}) bool {
 				fmt.Fprintln(e.Out, key, ":", value.(InternalCmd).Usage)
 				return true
 			})
@@ -61,7 +43,7 @@ func (m InternalCmdMap) Get(key string) (InternalCmd, error) {
 	return InternalCmd(cmd), nil
 }
 
-func (cmd InternalCmd) Exec(env env.Env, args string, argv ...string) error {
+func (cmd InternalCmd) Exec(env Env, args string, argv ...string) error {
 	return cmd.Fn(env, args, argv...)
 }
 
