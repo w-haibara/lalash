@@ -15,8 +15,9 @@ func (c Command) Eval(ctx context.Context, tokens []Token) error {
 		if v.Kind == SubstitutionToken {
 			res, err := func() (string, error) {
 				var b bytes.Buffer
+				w := bufio.NewWriter(&b)
 				c := c
-				c.Env.Out = bufio.NewWriter(&b)
+				c.Env.Out = w
 
 				tokens, err := Parse(v.Val)
 				if err != nil {
@@ -30,6 +31,8 @@ func (c Command) Eval(ctx context.Context, tokens []Token) error {
 				if err := c.Eval(ctx, tokens); err != nil {
 					return "", fmt.Errorf("[eval error]", err)
 				}
+
+				w.Flush()
 
 				return strings.ReplaceAll(b.String(), "\n", " "), nil
 			}()
