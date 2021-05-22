@@ -187,7 +187,7 @@ func checkArgv(argv []string, n int) error {
 
 func (i Internal) GetAlias(args string) string {
 	if v, ok := i.Alias.Load(args); ok {
-		return v.(string)
+		return i.GetAlias(v.(string))
 	}
 	return args
 }
