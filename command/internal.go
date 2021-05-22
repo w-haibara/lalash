@@ -40,6 +40,9 @@ func NewInternalCmdMap() Internal {
 		in.Cmds.Store("l-alias", InternalCmd{
 			Usage: "alias <alias> <command name>",
 			Fn: func(e Env, args string, argv ...string) error {
+				if err := checkArgv(argv, 2); err != nil {
+					return err
+				}
 				in.Alias.Store(argv[0], argv[1])
 				return nil
 			},
@@ -48,6 +51,9 @@ func NewInternalCmdMap() Internal {
 		in.Cmds.Store("l-unalias", InternalCmd{
 			Usage: "alias <alias> <command name>",
 			Fn: func(e Env, args string, argv ...string) error {
+				if err := checkArgv(argv, 1); err != nil {
+					return err
+				}
 				in.Alias.Delete(argv[0])
 				return nil
 			},
@@ -69,6 +75,9 @@ func NewInternalCmdMap() Internal {
 		in.Cmds.Store("l-var", InternalCmd{
 			Usage: "l-var <immutable var name> <value>",
 			Fn: func(e Env, args string, argv ...string) error {
+				if err := checkArgv(argv, 2); err != nil {
+					return err
+				}
 				_, ok := in.Var.Load(argv[0])
 				if !ok {
 					_, ok = in.MutVar.Load(argv[0])
@@ -84,6 +93,9 @@ func NewInternalCmdMap() Internal {
 		in.Cmds.Store("l-var-mut", InternalCmd{
 			Usage: "l-var-mut <mutable var name> <value>",
 			Fn: func(e Env, args string, argv ...string) error {
+				if err := checkArgv(argv, 2); err != nil {
+					return err
+				}
 				_, ok := in.Var.Load(argv[0])
 				if !ok {
 					_, ok = in.MutVar.Load(argv[0])
@@ -99,6 +111,9 @@ func NewInternalCmdMap() Internal {
 		in.Cmds.Store("l-var-ch", InternalCmd{
 			Usage: "l-var-ch <mutable var name> <new value>",
 			Fn: func(e Env, args string, argv ...string) error {
+				if err := checkArgv(argv, 2); err != nil {
+					return err
+				}
 				if _, ok := in.Var.Load(argv[0]); ok {
 					return fmt.Errorf("variable is immutable:", argv[1])
 				}
@@ -113,6 +128,9 @@ func NewInternalCmdMap() Internal {
 		in.Cmds.Store("l-var-ref", InternalCmd{
 			Usage: "l-var-ref <var name>",
 			Fn: func(e Env, args string, argv ...string) error {
+				if err := checkArgv(argv, 1); err != nil {
+					return err
+				}
 				v, ok := in.Var.Load(argv[0])
 				if !ok {
 					v, ok = in.MutVar.Load(argv[0])
@@ -128,6 +146,9 @@ func NewInternalCmdMap() Internal {
 		in.Cmds.Store("l-var-del", InternalCmd{
 			Usage: "l-var-del <var name>",
 			Fn: func(e Env, args string, argv ...string) error {
+				if err := checkArgv(argv, 1); err != nil {
+					return err
+				}
 				in.Var.Delete(argv[0])
 				in.MutVar.Delete(argv[0])
 				return nil
@@ -155,6 +176,13 @@ func NewInternalCmdMap() Internal {
 	}()
 
 	return in
+}
+
+func checkArgv(argv []string, n int) error {
+	if len(argv) < n {
+		return fmt.Errorf("%d arguments required", n)
+	}
+	return nil
 }
 
 func (i Internal) GetAlias(args string) string {
