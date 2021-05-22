@@ -13,7 +13,7 @@ type Env struct {
 
 type Command struct {
 	Env      Env
-	Internal InternalCmdMap
+	Internal Internal
 }
 
 func New() Command {

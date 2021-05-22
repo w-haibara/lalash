@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"reflect"
 	"sync"
 )
 
@@ -11,10 +10,86 @@ type InternalCmd struct {
 	Fn    func(Env, string, ...string) error
 }
 
-type InternalCmdMap sync.Map
+type Internal struct {
+	CmdMap sync.Map
+	MutVar sync.Map
+	Var    sync.Map
+}
 
-func NewInternalCmdMap() InternalCmdMap {
+func NewInternalCmdMap() Internal {
 	var m sync.Map
+	var mutVarMap sync.Map
+	var varMap sync.Map
+
+	m.Store("l-var", InternalCmd{
+		Usage: "l-var <immutable var name> <value>",
+		Fn: func(e Env, args string, argv ...string) error {
+			if _, ok := varMap.Load(argv[0]); ok {
+				return fmt.Errorf("variable is already exists:", argv[0])
+			}
+			varMap.Store(argv[0], argv[1])
+			return nil
+		},
+	})
+
+	m.Store("l-var-mut", InternalCmd{
+		Usage: "l-var-mut <mutable var name> <value>",
+		Fn: func(e Env, args string, argv ...string) error {
+			if _, ok := mutVarMap.Load(argv[0]); ok {
+				return fmt.Errorf("variable is already exists:", argv[0])
+			}
+			mutVarMap.Store(argv[0], argv[1])
+			return nil
+		},
+	})
+
+	m.Store("l-var-ch", InternalCmd{
+		Usage: "l-var-ch <mutable var name> <new value>",
+		Fn: func(e Env, args string, argv ...string) error {
+			if _, ok := varMap.Load(argv[0]); ok {
+				return fmt.Errorf("variable is immutable:", argv[1])
+			}
+			if _, ok := mutVarMap.Load(argv[0]); !ok {
+				return fmt.Errorf("variable is not defined:", argv[1])
+			}
+			mutVarMap.Store(argv[0], argv[1])
+			return nil
+		},
+	})
+
+	m.Store("l-var-ref", InternalCmd{
+		Usage: "l-var-ref <var name>",
+		Fn: func(e Env, args string, argv ...string) error {
+			v, ok := varMap.Load(argv[0])
+			if !ok {
+				v, ok = mutVarMap.Load(argv[0])
+			}
+			if !ok {
+				return fmt.Errorf("variable is not defined:", argv[0])
+			}
+			fmt.Fprintln(e.Out, v)
+			return nil
+		},
+	})
+
+	m.Store("l-var-show", InternalCmd{
+		Usage: "l-var-show",
+		Fn: func(e Env, args string, argv ...string) error {
+			fmt.Fprintln(e.Out, "[mutable variables]")
+			mutVarMap.Range(func(key, value interface{}) bool {
+				fmt.Fprintln(e.Out, key, ":", value)
+				return true
+			})
+
+			fmt.Fprintln(e.Out, "\n[immutable variables]")
+			varMap.Range(func(key, value interface{}) bool {
+				fmt.Fprintln(e.Out, key, ":", value)
+				return true
+			})
+
+			return nil
+		},
+	})
 
 	m.Store("help", InternalCmd{
 		Usage: "help",
@@ -27,12 +102,15 @@ func NewInternalCmdMap() InternalCmdMap {
 		},
 	})
 
-	return InternalCmdMap(m)
+	return Internal{
+		CmdMap: m,
+		MutVar: mutVarMap,
+		Var:    varMap,
+	}
 }
 
-func (m InternalCmdMap) Get(key string) (InternalCmd, error) {
-	cmds := sync.Map(m)
-	v, ok := cmds.Load(key)
+func (i Internal) Get(key string) (InternalCmd, error) {
+	v, ok := i.CmdMap.Load(key)
 	if !ok {
 		return InternalCmd{}, fmt.Errorf("command not found")
 	}
@@ -45,12 +123,4 @@ func (m InternalCmdMap) Get(key string) (InternalCmd, error) {
 
 func (cmd InternalCmd) Exec(env Env, args string, argv ...string) error {
 	return cmd.Fn(env, args, argv...)
-}
-
-func checkMapType(m sync.Map, key string) bool {
-	v, ok := m.Load(key)
-	if !ok {
-		return false
-	}
-	return reflect.TypeOf(v) == reflect.TypeOf(InternalCmd{})
 }
