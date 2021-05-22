@@ -37,7 +37,11 @@ func NewInternalCmdMap() Internal {
 		m.Store("l-var", InternalCmd{
 			Usage: "l-var <immutable var name> <value>",
 			Fn: func(e Env, args string, argv ...string) error {
-				if _, ok := varMap.Load(argv[0]); ok {
+				_, ok := varMap.Load(argv[0])
+				if !ok {
+					_, ok = mutVarMap.Load(argv[0])
+				}
+				if ok {
 					return fmt.Errorf("variable is already exists:", argv[0])
 				}
 				varMap.Store(argv[0], argv[1])
@@ -48,7 +52,11 @@ func NewInternalCmdMap() Internal {
 		m.Store("l-var-mut", InternalCmd{
 			Usage: "l-var-mut <mutable var name> <value>",
 			Fn: func(e Env, args string, argv ...string) error {
-				if _, ok := mutVarMap.Load(argv[0]); ok {
+				_, ok := varMap.Load(argv[0])
+				if !ok {
+					_, ok = mutVarMap.Load(argv[0])
+				}
+				if ok {
 					return fmt.Errorf("variable is already exists:", argv[0])
 				}
 				mutVarMap.Store(argv[0], argv[1])
