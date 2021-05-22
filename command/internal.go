@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 )
 
@@ -28,10 +29,17 @@ func NewInternalCmdMap() Internal {
 	in.Cmds.Store("help", InternalCmd{
 		Usage: "help",
 		Fn: func(e Env, args string, argv ...string) error {
+			var s []string
 			in.Cmds.Range(func(key, value interface{}) bool {
-				fmt.Fprintln(e.Out, key, ":", value.(InternalCmd).Usage)
+				s = append(s, fmt.Sprintln(key, ":", value.(InternalCmd).Usage))
 				return true
 			})
+			sort.Strings(s)
+			ret := ""
+			for _, v := range s {
+				ret += v
+			}
+			fmt.Fprintln(e.Out, ret)
 			return nil
 		},
 	})
