@@ -85,6 +85,15 @@ func NewInternalCmdMap() Internal {
 			},
 		})
 
+		m.Store("l-var-del", InternalCmd{
+			Usage: "l-var-del <var name>",
+			Fn: func(e Env, args string, argv ...string) error {
+				varMap.Delete(argv[0])
+				mutVarMap.Delete(argv[0])
+				return nil
+			},
+		})
+
 		m.Store("l-var-show", InternalCmd{
 			Usage: "l-var-show",
 			Fn: func(e Env, args string, argv ...string) error {
