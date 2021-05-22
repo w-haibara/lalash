@@ -1,13 +1,13 @@
-list := *.go
+list := main.go
 
 lalash: $(list) go.mod
-	gofmt -w $(list)
+	go fmt ./...
 	go mod tidy
 	go build -o lalash 
 
 .PHONY: run
 run:
-	gofmt -w $(list)
+	go fmt ./...
 	go mod tidy
 	go run $(list)
 
