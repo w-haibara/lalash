@@ -23,6 +23,6 @@ func New() Command {
 			Out: os.Stdout,
 			Err: os.Stderr,
 		},
-		Internal: NewInternalCmdMap(),
+		Internal: NewInternal(),
 	}
 }

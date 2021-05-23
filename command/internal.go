@@ -18,7 +18,7 @@ type Internal struct {
 	Var    *sync.Map
 }
 
-func NewInternalCmdMap() Internal {
+func NewInternal() Internal {
 	in := Internal{
 		Cmds:   new(sync.Map),
 		Alias:  new(sync.Map),
