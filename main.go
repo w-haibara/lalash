@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"lalash/command"
+	"lalash/eval"
 	"lalash/history"
 	"lalash/parser"
 
@@ -32,7 +33,7 @@ func Run() int {
 	history.ReadHistory(line)
 	defer history.WriteHistory(line)
 
-	cmd := command.New()
+	cmd := eval.Command(command.New())
 
 	for {
 		ctx, cancel := context.WithCancel(context.Background())
