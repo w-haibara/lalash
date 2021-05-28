@@ -39,7 +39,7 @@ func (c Command) Eval(ctx context.Context, tokens []parser.Token) error {
 
 				w.Flush()
 
-				return strings.ReplaceAll(b.String(), "\n", " "), nil
+				return strings.TrimSpace(strings.ReplaceAll(b.String(), "\n", " ")), nil
 			}()
 			if err != nil {
 				return err
