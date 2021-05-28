@@ -7,6 +7,7 @@ import (
 
 	"lalash/command"
 	"lalash/history"
+	"lalash/parser"
 
 	"github.com/peterh/liner"
 )
@@ -44,7 +45,7 @@ func Run() int {
 		}
 		line.AppendHistory(expr)
 
-		tokens, err := command.Parse(expr)
+		tokens, err := parser.Parse(expr)
 		if err != nil {
 			log.Println("[parse error]", err)
 		}

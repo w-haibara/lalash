@@ -7,19 +7,21 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"lalash/parser"
 )
 
-func (c Command) Eval(ctx context.Context, tokens []Token) error {
+func (c Command) Eval(ctx context.Context, tokens []parser.Token) error {
 	argv := []string{}
 	for i, v := range tokens {
-		if v.Kind == SubstitutionToken {
+		if v.Kind == parser.SubstitutionToken {
 			res, err := func() (string, error) {
 				var b bytes.Buffer
 				w := bufio.NewWriter(&b)
 				c := c
 				c.Env.Out = w
 
-				tokens, err := Parse(v.Val)
+				tokens, err := parser.Parse(v.Val)
 				if err != nil {
 					return "", fmt.Errorf("[parse error]", err)
 				}
@@ -41,7 +43,7 @@ func (c Command) Eval(ctx context.Context, tokens []Token) error {
 			}
 
 			tokens[i].Val = res
-			tokens[i].Kind = StringToken
+			tokens[i].Kind = parser.StringToken
 		}
 		argv = append(argv, tokens[i].Val)
 	}
