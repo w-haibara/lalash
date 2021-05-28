@@ -94,13 +94,83 @@ func Parse(expr string) ([]Token, error) {
 		}
 	}
 
-	for i, v := range ret {
-		if strings.HasPrefix(v.Val, "`") && strings.HasSuffix(v.Val, "`") {
-			ret[i].Val = strings.TrimPrefix(v.Val, "`")
-			ret[i].Val = strings.TrimSuffix(ret[i].Val, "`")
-			ret[i].Kind = SubstitutionToken
-		}
+	ret, err := ParenParser(ret)
+	if err != nil {
+		return nil, err
 	}
 
 	return ret, nil
+}
+
+func ParenParser(ret []Token) ([]Token, error) {
+	tokens := []Token{}
+	count := 0
+	tmp := ""
+	for i := 0; i < len(ret); i++ {
+		b1 := func(s string) bool {
+			r1 := false
+			r2 := false
+			for {
+				r1 = strings.HasPrefix(s, "(")
+				if !r1 {
+					break
+				}
+				r2 = r2 || r1
+				count++
+				s = strings.TrimPrefix(s, "(")
+			}
+			return r2
+		}(ret[i].Val)
+
+		b2 := func(s string) bool {
+			r1 := false
+			r2 := false
+			for {
+				r1 = strings.HasSuffix(s, ")")
+				if !r1 {
+					break
+				}
+				r2 = r2 || r1
+				count--
+				s = strings.TrimSuffix(s, ")")
+			}
+			return r2
+		}(ret[i].Val)
+
+		if b1 || b2 || count > 0 {
+			tmp = concat(tmp, ret[i].Val)
+		}
+
+		if count == 0 {
+			if tmp != "" {
+				tmp = strings.TrimPrefix(tmp, "(")
+				tmp = strings.TrimSuffix(tmp, ")")
+				tmp = strings.TrimSpace(tmp)
+				tokens = append(tokens, Token{
+					Val:  tmp,
+					Kind: SubstitutionToken,
+				})
+				tmp = ""
+				continue
+			}
+			tokens = append(tokens, ret[i])
+			continue
+		}
+	}
+
+	if count > 0 {
+		return nil, fmt.Errorf("parentheses not terminated")
+	}
+
+	return tokens, nil
+}
+
+func concat(s1, s2 string) string {
+	if s2 == "" {
+		return s1
+	}
+	if s1 != "" {
+		s1 += " "
+	}
+	return s1 + s2
 }
