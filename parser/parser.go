@@ -169,8 +169,10 @@ func concat(s1, s2 string) string {
 	if s2 == "" {
 		return s1
 	}
-	if s1 != "" {
-		s1 += " "
+	if s1 == "" {
+		return s2
 	}
-	return s1 + s2
+	s1 = strings.TrimSpace(s1)
+	s2 = strings.TrimSpace(s2)
+	return s1 + " " + s2
 }
