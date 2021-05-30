@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 
 	"lalash/command"
 	"lalash/eval"
@@ -24,16 +25,25 @@ func main() {
 }
 
 func Run() int {
+	cmd := eval.Command(command.New())
+
 	line := liner.NewLiner()
 	defer line.Close()
+
+	line.SetCompleter(func(line string) (c []string) {
+		for _, v := range cmd.Internal.GetAliasAll() {
+			if strings.HasPrefix(v, line) {
+				c = append(c, v)
+			}
+		}
+		return
+	})
 
 	line.SetCtrlCAborts(true)
 
 	history := history.New(historyFileName)
 	history.ReadHistory(line)
 	defer history.WriteHistory(line)
-
-	cmd := eval.Command(command.New())
 
 	for {
 		ctx, cancel := context.WithCancel(context.Background())

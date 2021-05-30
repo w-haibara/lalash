@@ -193,6 +193,15 @@ func checkArgv(argv []string, n int) error {
 	return nil
 }
 
+func (i Internal) GetAliasAll() []string {
+	var s []string
+	i.Alias.Range(func(key, value interface{}) bool {
+		s = append(s, key.(string))
+		return true
+	})
+	return s
+}
+
 func (i Internal) GetAlias(args string) string {
 	if v, ok := i.Alias.Load(args); ok {
 		return i.GetAlias(v.(string))
