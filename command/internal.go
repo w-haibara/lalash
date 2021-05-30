@@ -209,6 +209,15 @@ func (i Internal) GetAlias(args string) string {
 	return args
 }
 
+func (i Internal) GetCmdsAll() []string {
+	var s []string
+	i.Cmds.Range(func(key, value interface{}) bool {
+		s = append(s, key.(string))
+		return true
+	})
+	return s
+}
+
 func (i Internal) Get(key string) (InternalCmd, error) {
 	v, ok := i.Cmds.Load(key)
 	if !ok {

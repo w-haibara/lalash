@@ -31,6 +31,14 @@ func Run() int {
 	defer line.Close()
 
 	line.SetCompleter(func(line string) (c []string) {
+		if len(strings.TrimSpace(line)) <= 0 {
+			return nil
+		}
+		for _, v := range cmd.Internal.GetCmdsAll() {
+			if strings.HasPrefix(v, line) {
+				c = append(c, v)
+			}
+		}
 		for _, v := range cmd.Internal.GetAliasAll() {
 			if strings.HasPrefix(v, line) {
 				c = append(c, v)
