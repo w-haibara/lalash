@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"sort"
 	"sync"
 )
 
@@ -25,165 +24,11 @@ func NewInternal() Internal {
 		MutVar: new(sync.Map),
 		Var:    new(sync.Map),
 	}
-
-	in.Cmds.Store("help", InternalCmd{
-		Usage: "help",
-		Fn: func(e Env, args string, argv ...string) error {
-			var s []string
-			in.Cmds.Range(func(key, value interface{}) bool {
-				s = append(s, fmt.Sprintln(key, ":", value.(InternalCmd).Usage))
-				return true
-			})
-			sort.Strings(s)
-			ret := ""
-			for _, v := range s {
-				ret += v
-			}
-			fmt.Fprintln(e.Out, ret)
-			return nil
-		},
-	})
-
-	func() {
-		in.Cmds.Store("l-alias", InternalCmd{
-			Usage: "alias <alias> <command name>",
-			Fn: func(e Env, args string, argv ...string) error {
-				if err := checkArgv(argv, 2); err != nil {
-					return err
-				}
-				in.Alias.Store(argv[0], argv[1])
-				return nil
-			},
-		})
-
-		in.Cmds.Store("l-unalias", InternalCmd{
-			Usage: "alias <alias> <command name>",
-			Fn: func(e Env, args string, argv ...string) error {
-				if err := checkArgv(argv, 1); err != nil {
-					return err
-				}
-				in.Alias.Delete(argv[0])
-				return nil
-			},
-		})
-
-		in.Cmds.Store("l-alias-show", InternalCmd{
-			Usage: "l-alias-show",
-			Fn: func(e Env, args string, argv ...string) error {
-				in.Alias.Range(func(key, value interface{}) bool {
-					fmt.Fprintln(e.Out, key, ":", value)
-					return true
-				})
-				return nil
-			},
-		})
-	}()
-
-	func() {
-		in.Cmds.Store("l-var", InternalCmd{
-			Usage: "l-var <immutable var name> <value>",
-			Fn: func(e Env, args string, argv ...string) error {
-				if err := checkArgv(argv, 2); err != nil {
-					return err
-				}
-				_, ok := in.Var.Load(argv[0])
-				if !ok {
-					_, ok = in.MutVar.Load(argv[0])
-				}
-				if ok {
-					return fmt.Errorf("variable is already exists:", argv[0])
-				}
-				in.Var.Store(argv[0], argv[1])
-				return nil
-			},
-		})
-
-		in.Cmds.Store("l-var-mut", InternalCmd{
-			Usage: "l-var-mut <mutable var name> <value>",
-			Fn: func(e Env, args string, argv ...string) error {
-				if err := checkArgv(argv, 2); err != nil {
-					return err
-				}
-				_, ok := in.Var.Load(argv[0])
-				if !ok {
-					_, ok = in.MutVar.Load(argv[0])
-				}
-				if ok {
-					return fmt.Errorf("variable is already exists:", argv[0])
-				}
-				in.MutVar.Store(argv[0], argv[1])
-				return nil
-			},
-		})
-
-		in.Cmds.Store("l-var-ch", InternalCmd{
-			Usage: "l-var-ch <mutable var name> <new value>",
-			Fn: func(e Env, args string, argv ...string) error {
-				if err := checkArgv(argv, 2); err != nil {
-					return err
-				}
-				if _, ok := in.Var.Load(argv[0]); ok {
-					return fmt.Errorf("variable is immutable:", argv[1])
-				}
-				if _, ok := in.MutVar.Load(argv[0]); !ok {
-					return fmt.Errorf("variable is not defined:", argv[1])
-				}
-				in.MutVar.Store(argv[0], argv[1])
-				return nil
-			},
-		})
-
-		in.Cmds.Store("l-var-ref", InternalCmd{
-			Usage: "l-var-ref <var name>",
-			Fn: func(e Env, args string, argv ...string) error {
-				if err := checkArgv(argv, 1); err != nil {
-					return err
-				}
-				v, ok := in.Var.Load(argv[0])
-				if !ok {
-					v, ok = in.MutVar.Load(argv[0])
-				}
-				if !ok {
-					return fmt.Errorf("variable is not defined:", argv[0])
-				}
-				fmt.Fprintln(e.Out, v)
-				return nil
-			},
-		})
-
-		in.Cmds.Store("l-var-del", InternalCmd{
-			Usage: "l-var-del <var name>",
-			Fn: func(e Env, args string, argv ...string) error {
-				if err := checkArgv(argv, 1); err != nil {
-					return err
-				}
-				in.Var.Delete(argv[0])
-				in.MutVar.Delete(argv[0])
-				return nil
-			},
-		})
-
-		in.Cmds.Store("l-var-show", InternalCmd{
-			Usage: "l-var-show",
-			Fn: func(e Env, args string, argv ...string) error {
-				fmt.Fprintln(e.Out, "[mutable variables]")
-				in.MutVar.Range(func(key, value interface{}) bool {
-					fmt.Fprintln(e.Out, key, ":", value)
-					return true
-				})
-
-				fmt.Fprintln(e.Out, "\n[immutable variables]")
-				in.Var.Range(func(key, value interface{}) bool {
-					fmt.Fprintln(e.Out, key, ":", value)
-					return true
-				})
-
-				return nil
-			},
-		})
-	}()
-
 	return in
+}
+
+func (in Internal) SetInternalCmd(name string, cmd InternalCmd) {
+	in.Cmds.Store(name, cmd)
 }
 
 func checkArgv(argv []string, n int) error {
