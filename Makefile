@@ -7,7 +7,7 @@ lalash: cmd/lalash/main.go *.go */*.go go.mod
 run:
 	go fmt ./...
 	go mod tidy
-	go run .
+	go run ./cmd/...
 
 .PHONY: init
 init:
