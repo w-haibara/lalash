@@ -1,9 +1,8 @@
-package main
+package lalash
 
 import (
 	"context"
 	"log"
-	"os"
 	"strings"
 
 	"lalash/command"
@@ -19,10 +18,6 @@ const (
 	exitCodeOK      = iota
 	exitCodeErr
 )
-
-func main() {
-	os.Exit(Run())
-}
 
 func Run() int {
 	cmd := eval.Command(command.New())

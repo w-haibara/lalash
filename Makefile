@@ -1,7 +1,7 @@
-lalash: main.go */*.go go.mod
+lalash: cmd/lalash/main.go *.go */*.go go.mod
 	go fmt ./...
 	go mod tidy
-	go build -o lalash
+	go build -o lalash ./cmd/...
 
 .PHONY: run
 run:
