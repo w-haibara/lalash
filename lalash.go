@@ -50,23 +50,21 @@ func RunREPL() int {
 	defer history.WriteHistory(line)
 
 	for {
-		if err := readAndEval(cmd, line); err != nil {
+		if err := func() error {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			expr, err := line.Prompt("$ ")
+			if err != nil {
+				return fmt.Errorf("[read line error] %v", err.Error())
+			}
+			line.AppendHistory(expr)
+
+			return Eval(ctx, cmd, expr)
+		}(); err != nil {
 			log.Println(err.Error())
 		}
 	}
-}
-
-func readAndEval(cmd eval.Command, line *liner.State) error {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	expr, err := line.Prompt("$ ")
-	if err != nil {
-		return fmt.Errorf("[read line error] %v", err.Error())
-	}
-	line.AppendHistory(expr)
-
-	return Eval(ctx, cmd, expr)
 }
 
 func Eval(ctx context.Context, cmd eval.Command, expr string) error {
