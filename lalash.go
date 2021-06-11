@@ -55,7 +55,7 @@ func Run() int {
 		expr, err := line.Prompt("$ ")
 		if err != nil {
 			log.Println("[read line error]", err)
-			return exitCodeErr
+			continue
 		}
 		line.AppendHistory(expr)
 
@@ -65,10 +65,12 @@ func Run() int {
 		}
 
 		if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
+			cancel()
 			continue
 		}
 
 		if err := cmd.Eval(ctx, tokens); err != nil {
+			cancel()
 			log.Println("[eval error]", err)
 			continue
 		}
