@@ -2,6 +2,7 @@ package lalash
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -19,7 +20,7 @@ const (
 	exitCodeErr
 )
 
-func Run() int {
+func RunREPL() int {
 	cmd := eval.Command(command.New())
 
 	line := liner.NewLiner()
@@ -49,30 +50,38 @@ func Run() int {
 	defer history.WriteHistory(line)
 
 	for {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		expr, err := line.Prompt("$ ")
-		if err != nil {
-			log.Println("[read line error]", err)
-			continue
-		}
-		line.AppendHistory(expr)
-
-		tokens, err := parser.Parse(expr)
-		if err != nil {
-			log.Println("[parse error]", err)
-		}
-
-		if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
-			cancel()
-			continue
-		}
-
-		if err := cmd.Eval(ctx, tokens); err != nil {
-			cancel()
-			log.Println("[eval error]", err)
-			continue
+		if err := readAndEval(cmd, line); err != nil {
+			log.Println(err)
 		}
 	}
+}
+
+func readAndEval(cmd eval.Command, line *liner.State) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	expr, err := line.Prompt("$ ")
+	if err != nil {
+		return fmt.Errorf("[read line error]", err)
+	}
+	line.AppendHistory(expr)
+
+	return Eval(ctx, cmd, expr)
+}
+
+func Eval(ctx context.Context, cmd eval.Command, expr string) error {
+	tokens, err := parser.Parse(expr)
+	if err != nil {
+		return fmt.Errorf("[parse error]", err)
+	}
+
+	if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
+		return nil
+	}
+
+	if err := cmd.Eval(ctx, tokens); err != nil {
+		return fmt.Errorf("[eval error]", err)
+	}
+
+	return nil
 }

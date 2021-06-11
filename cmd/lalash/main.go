@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	os.Exit(lalash.Run())
+	os.Exit(lalash.RunREPL())
 }
