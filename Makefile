@@ -11,7 +11,7 @@ run:
 
 .PHONY: init
 init:
-	go mod init lalash
+	go mod init github.com/w-haibara/lalash
 	go mod tidy
 
 .PHONY: docker

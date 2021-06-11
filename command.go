@@ -1,4 +1,4 @@
-package command
+package lalash
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ type Command struct {
 	Internal Internal
 }
 
-func New() Command {
+func cmdNew() Command {
 	cmd := Command{
 		Env: Env{
 			In:  os.Stdin,

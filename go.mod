@@ -1,4 +1,4 @@
-module lalash
+module github.com/w-haibara/lalash
 
 go 1.16
 

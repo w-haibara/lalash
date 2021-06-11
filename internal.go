@@ -1,4 +1,4 @@
-package command
+package lalash
 
 import (
 	"fmt"

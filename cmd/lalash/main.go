@@ -1,8 +1,9 @@
 package main
 
 import (
-	"lalash"
 	"os"
+
+	"github.com/w-haibara/lalash"
 )
 
 func main() {

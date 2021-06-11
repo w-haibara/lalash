@@ -1,4 +1,4 @@
-package eval
+package lalash
 
 import (
 	"bufio"
@@ -8,11 +8,25 @@ import (
 	"os/exec"
 	"strings"
 
-	"lalash/command"
-	"lalash/parser"
+	"github.com/w-haibara/lalash/parser"
 )
 
-type Command command.Command
+func Eval(ctx context.Context, cmd Command, expr string) error {
+	tokens, err := parser.Parse(expr)
+	if err != nil {
+		return fmt.Errorf("[parse error] %v", err.Error())
+	}
+
+	if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
+		return nil
+	}
+
+	if err := cmd.Eval(ctx, tokens); err != nil {
+		return fmt.Errorf("[eval error] %v", err.Error())
+	}
+
+	return nil
+}
 
 func (c Command) Eval(ctx context.Context, tokens []parser.Token) error {
 	argv := []string{}
@@ -75,7 +89,7 @@ func (c Command) Exec(ctx context.Context, argv []string) error {
 	return nil
 }
 
-func Exec(e command.Env, ctx context.Context, args string, argv ...string) error {
+func Exec(e Env, ctx context.Context, args string, argv ...string) error {
 	cmd := exec.CommandContext(ctx, args, argv...)
 	cmd.Stdin = e.In
 	cmd.Stdout = e.Out

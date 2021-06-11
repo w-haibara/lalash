@@ -6,12 +6,8 @@ import (
 	"log"
 	"strings"
 
-	"lalash/command"
-	"lalash/eval"
-	"lalash/history"
-	"lalash/parser"
-
 	"github.com/peterh/liner"
+	"github.com/w-haibara/lalash/history"
 )
 
 const (
@@ -21,7 +17,7 @@ const (
 )
 
 func RunREPL() int {
-	cmd := eval.Command(command.New())
+	cmd := cmdNew()
 
 	line := liner.NewLiner()
 	defer line.Close()
@@ -65,21 +61,4 @@ func RunREPL() int {
 			log.Println(err.Error())
 		}
 	}
-}
-
-func Eval(ctx context.Context, cmd eval.Command, expr string) error {
-	tokens, err := parser.Parse(expr)
-	if err != nil {
-		return fmt.Errorf("[parse error] %v", err.Error())
-	}
-
-	if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
-		return nil
-	}
-
-	if err := cmd.Eval(ctx, tokens); err != nil {
-		return fmt.Errorf("[eval error] %v", err.Error())
-	}
-
-	return nil
 }
