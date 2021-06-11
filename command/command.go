@@ -100,7 +100,7 @@ func (cmd Command) setVarFamily() {
 				_, ok = cmd.Internal.MutVar.Load(argv[0])
 			}
 			if ok {
-				return fmt.Errorf("variable is already exists:", argv[0])
+				return fmt.Errorf("variable is already exists: %v", argv[0])
 			}
 			cmd.Internal.Var.Store(argv[0], argv[1])
 			return nil
@@ -118,7 +118,7 @@ func (cmd Command) setVarFamily() {
 				_, ok = cmd.Internal.MutVar.Load(argv[0])
 			}
 			if ok {
-				return fmt.Errorf("variable is already exists:", argv[0])
+				return fmt.Errorf("variable is already exists: %v", argv[0])
 			}
 			cmd.Internal.MutVar.Store(argv[0], argv[1])
 			return nil
@@ -132,10 +132,10 @@ func (cmd Command) setVarFamily() {
 				return err
 			}
 			if _, ok := cmd.Internal.Var.Load(argv[0]); ok {
-				return fmt.Errorf("variable is immutable:", argv[1])
+				return fmt.Errorf("variable is immutable: %v", argv[1])
 			}
 			if _, ok := cmd.Internal.MutVar.Load(argv[0]); !ok {
-				return fmt.Errorf("variable is not defined:", argv[1])
+				return fmt.Errorf("variable is not defined: %v", argv[1])
 			}
 			cmd.Internal.MutVar.Store(argv[0], argv[1])
 			return nil
@@ -149,10 +149,10 @@ func (cmd Command) setVarFamily() {
 				return err
 			}
 			if _, ok := cmd.Internal.Var.Load(argv[0]); ok {
-				return fmt.Errorf("variable is immutable:", argv[1])
+				return fmt.Errorf("variable is immutable: %v", argv[1])
 			}
 			if _, ok := cmd.Internal.MutVar.Load(argv[0]); !ok {
-				return fmt.Errorf("variable is not defined:", argv[1])
+				return fmt.Errorf("variable is not defined: %v", argv[1])
 			}
 			cmd.Internal.MutVar.Store(argv[0], argv[1])
 			return nil
@@ -170,7 +170,7 @@ func (cmd Command) setVarFamily() {
 				v, ok = cmd.Internal.MutVar.Load(argv[0])
 			}
 			if !ok {
-				return fmt.Errorf("variable is not defined:", argv[0])
+				return fmt.Errorf("variable is not defined: %v", argv[0])
 			}
 			fmt.Fprintln(e.Out, v)
 			return nil

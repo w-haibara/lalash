@@ -26,7 +26,7 @@ func (c Command) Eval(ctx context.Context, tokens []parser.Token) error {
 
 				tokens, err := parser.Parse(v.Val)
 				if err != nil {
-					return "", fmt.Errorf("[parse error]", err)
+					return "", fmt.Errorf("[parse error] %v", err.Error())
 				}
 
 				if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
@@ -34,7 +34,7 @@ func (c Command) Eval(ctx context.Context, tokens []parser.Token) error {
 				}
 
 				if err := c.Eval(ctx, tokens); err != nil {
-					return "", fmt.Errorf("[eval error]", err)
+					return "", fmt.Errorf("[eval error] %v", err.Error())
 				}
 
 				w.Flush()
@@ -63,13 +63,13 @@ func (c Command) Exec(ctx context.Context, argv []string) error {
 
 	if cmd, err := c.Internal.Get(argv[0]); err == nil {
 		if err := cmd.Exec(c.Env, argv[0], argv[1:]...); err != nil {
-			return fmt.Errorf("[internal exec error]", err)
+			return fmt.Errorf("[internal exec error] %v", err.Error())
 		}
 		return nil
 	}
 
 	if err := Exec(c.Env, ctx, argv[0], argv[1:]...); err != nil {
-		return fmt.Errorf("[exec error]", err)
+		return fmt.Errorf("[exec error] %v", err.Error())
 	}
 
 	return nil

@@ -51,7 +51,7 @@ func RunREPL() int {
 
 	for {
 		if err := readAndEval(cmd, line); err != nil {
-			log.Println(err)
+			log.Println(err.Error())
 		}
 	}
 }
@@ -62,7 +62,7 @@ func readAndEval(cmd eval.Command, line *liner.State) error {
 
 	expr, err := line.Prompt("$ ")
 	if err != nil {
-		return fmt.Errorf("[read line error]", err)
+		return fmt.Errorf("[read line error] %v", err.Error())
 	}
 	line.AppendHistory(expr)
 
@@ -72,7 +72,7 @@ func readAndEval(cmd eval.Command, line *liner.State) error {
 func Eval(ctx context.Context, cmd eval.Command, expr string) error {
 	tokens, err := parser.Parse(expr)
 	if err != nil {
-		return fmt.Errorf("[parse error]", err)
+		return fmt.Errorf("[parse error] %v", err.Error())
 	}
 
 	if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
@@ -80,7 +80,7 @@ func Eval(ctx context.Context, cmd eval.Command, expr string) error {
 	}
 
 	if err := cmd.Eval(ctx, tokens); err != nil {
-		return fmt.Errorf("[eval error]", err)
+		return fmt.Errorf("[eval error] %v", err.Error())
 	}
 
 	return nil
