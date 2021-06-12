@@ -60,7 +60,7 @@ func (c Command) Eval(ctx context.Context, tokens []parser.Token) error {
 			}
 
 			tokens[i].Val = res
-			tokens[i].Kind = parser.StringToken
+			tokens[i].Kind = parser.CommandToken
 		}
 		argv = append(argv, tokens[i].Val)
 	}
@@ -76,7 +76,7 @@ func (c Command) Exec(ctx context.Context, argv []string) error {
 	argv[0] = c.Internal.GetAlias(argv[0])
 
 	if cmd, err := c.Internal.Get(argv[0]); err == nil {
-		if err := cmd.Exec(c.Env, argv[0], argv[1:]...); err != nil {
+		if err := cmd.Exec(ctx, c.Env, argv[0], argv[1:]...); err != nil {
 			return fmt.Errorf("[internal exec error] %v", err.Error())
 		}
 		return nil

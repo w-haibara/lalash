@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	CommandToken      = "command"
 	StringToken       = "string"
 	SubstitutionToken = "substitution"
 )
@@ -44,7 +45,7 @@ func Parse(expr string) ([]Token, error) {
 				continue
 			}
 			ret = append(ret, Token{
-				Kind: StringToken,
+				Kind: CommandToken,
 				Val:  tmp,
 			})
 			continue
@@ -72,13 +73,13 @@ func Parse(expr string) ([]Token, error) {
 				continue
 			}
 			ret = append(ret, Token{
-				Kind: StringToken,
+				Kind: CommandToken,
 				Val:  tmp,
 			})
 			continue
 		}
 		ret = append(ret, Token{
-			Kind: StringToken,
+			Kind: CommandToken,
 			Val:  s.TokenText(),
 		})
 	}
@@ -89,6 +90,7 @@ func Parse(expr string) ([]Token, error) {
 
 	for i, v := range ret {
 		if strings.HasPrefix(v.Val, "\"") && strings.HasSuffix(v.Val, "\"") {
+			ret[i].Kind = StringToken
 			ret[i].Val = strings.TrimPrefix(v.Val, "\"")
 			ret[i].Val = strings.TrimSuffix(ret[i].Val, "\"")
 		}
@@ -107,6 +109,11 @@ func ParenParser(ret []Token) ([]Token, error) {
 	count := 0
 	tmp := ""
 	for i := 0; i < len(ret); i++ {
+		if ret[i].Kind == StringToken {
+			tokens = append(tokens, ret[i])
+			continue
+		}
+
 		b1 := func(s string) bool {
 			r1 := false
 			r2 := false
