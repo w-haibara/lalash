@@ -29,5 +29,6 @@ func cmdNew() Command {
 	cmd.setExit()
 	cmd.setAliasFamily()
 	cmd.setVarFamily()
+	cmd.setEvalFamily()
 	return cmd
 }
