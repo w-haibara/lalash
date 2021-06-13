@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"strings"
 	"testing"
 )
 
@@ -11,6 +12,7 @@ func TestEval(t *testing.T) {
 	tests := []struct {
 		name   string
 		expr   string
+		stdin  string
 		stdout string
 		stderr string
 		err    error
@@ -18,6 +20,7 @@ func TestEval(t *testing.T) {
 		{
 			name:   "echo1",
 			expr:   "echo abc",
+			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
 			err:    nil,
@@ -25,13 +28,23 @@ func TestEval(t *testing.T) {
 		{
 			name:   "echo2",
 			expr:   `echo " a b c "`,
+			stdin:  "",
 			stdout: " a b c \n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "stdin",
+			expr:   "wc",
+			stdin:  "abc",
+			stdout: "      0       1       3\n",
 			stderr: "",
 			err:    nil,
 		},
 		{
 			name:   "substitution1",
 			expr:   `echo (echo abc)`,
+			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
 			err:    nil,
@@ -39,6 +52,7 @@ func TestEval(t *testing.T) {
 		{
 			name:   "substitution2",
 			expr:   `echo (echo abc) (echo def)`,
+			stdin:  "",
 			stdout: "abc def\n",
 			stderr: "",
 			err:    nil,
@@ -46,6 +60,7 @@ func TestEval(t *testing.T) {
 		{
 			name:   "substitution3",
 			expr:   `echo (echo (echo abc))`,
+			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
 			err:    nil,
@@ -53,6 +68,9 @@ func TestEval(t *testing.T) {
 	}
 	for _, tt := range tests {
 		cmd := cmdNew()
+
+		i := strings.NewReader(tt.stdin)
+		cmd.Stdin = i
 
 		var out bytes.Buffer
 		o := bufio.NewWriter(&out)
