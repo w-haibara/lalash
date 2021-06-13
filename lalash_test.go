@@ -1,31 +1,84 @@
 package lalash
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"testing"
 )
 
 func TestEval(t *testing.T) {
 	tests := []struct {
-		name string
-		expr string
-		err  error
+		name   string
+		expr   string
+		stdout string
+		stderr string
+		err    error
 	}{
 		{
-			name: "echo",
-			expr: "echo abc",
-			err:  nil,
+			name:   "echo1",
+			expr:   "echo abc",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "echo2",
+			expr:   `echo " a b c "`,
+			stdout: " a b c \n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "substitution1",
+			expr:   `echo (echo abc)`,
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "substitution2",
+			expr:   `echo (echo abc) (echo def)`,
+			stdout: "abc def\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "substitution3",
+			expr:   `echo (echo (echo abc))`,
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
 		},
 	}
 	for _, tt := range tests {
-		cmd := eval.Command(cmdNew())
+		cmd := cmdNew()
+
+		var out bytes.Buffer
+		o := bufio.NewWriter(&out)
+		cmd.Stdout = o
+
+		var err bytes.Buffer
+		e := bufio.NewWriter(&err)
+		cmd.Stderr = e
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Eval(ctx, cmd, tt.expr); err != tt.err {
+			if err := EvalString(ctx, cmd, tt.expr); err != tt.err {
 				t.Errorf(err.Error())
+			}
+
+			o.Flush()
+			e.Flush()
+
+			if got := out.String(); got != tt.stdout {
+				t.Errorf("\n=== Stdout ===\n%q\n---  want  ---\n%q\n--------------", got, tt.stdout)
+			}
+
+			if got := err.String(); got != tt.stderr {
+				t.Errorf("\n=== Stderr ===\n%q\n---  want  ---\n%q\n--------------", got, tt.stderr)
 			}
 		})
 	}

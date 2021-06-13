@@ -14,6 +14,11 @@ init:
 	go mod init github.com/w-haibara/lalash
 	go mod tidy
 
+.PHONY: test
+test:
+	go fmt ./...
+	go test ./...
+
 .PHONY: docker
 docker:
 	docker build -t lalash .
