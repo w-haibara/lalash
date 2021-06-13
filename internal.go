@@ -1,10 +1,13 @@
 package lalash
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -276,6 +279,29 @@ func (cmd Command) setEvalFamily() {
 				return err
 			}
 			EvalString(ctx, cmd, argv[0])
+			return nil
+		},
+	})
+
+	cmd.Internal.Cmds.Store("pipe", InternalCmd{
+		Usage: "pipe",
+		Fn: func(ctx context.Context, args string, argv ...string) error {
+			if err := checkArgv(argv, 2); err != nil {
+				return err
+			}
+			cmd1 := cmd
+			cmd2 := cmd
+
+			var pipe bytes.Buffer
+			o := bufio.NewWriter(&pipe)
+			cmd1.Stdout = o
+			EvalString(ctx, cmd1, argv[0])
+			o.Flush()
+
+			i := strings.NewReader(pipe.String())
+			cmd2.Stdin = i
+			EvalString(ctx, cmd2, argv[1])
+
 			return nil
 		},
 	})
