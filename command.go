@@ -5,24 +5,18 @@ import (
 	"os"
 )
 
-type Env struct {
-	In  io.Reader
-	Out io.Writer
-	Err io.Writer
-}
-
 type Command struct {
-	Env      Env
+	Stdin    io.Reader
+	Stdout   io.Writer
+	Stderr   io.Writer
 	Internal Internal
 }
 
 func cmdNew() Command {
 	cmd := Command{
-		Env: Env{
-			In:  os.Stdin,
-			Out: os.Stdout,
-			Err: os.Stderr,
-		},
+		Stdin:    os.Stdin,
+		Stdout:   os.Stdout,
+		Stderr:   os.Stderr,
 		Internal: NewInternal(),
 	}
 	cmd.setHelp()

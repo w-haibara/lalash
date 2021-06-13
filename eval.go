@@ -11,7 +11,7 @@ import (
 	"github.com/w-haibara/lalash/parser"
 )
 
-func Eval(ctx context.Context, cmd Command, expr string) error {
+func EvalString(ctx context.Context, cmd Command, expr string) error {
 	tokens, err := parser.Parse(expr)
 	if err != nil {
 		return fmt.Errorf("[parse error] %v", err.Error())
@@ -21,22 +21,22 @@ func Eval(ctx context.Context, cmd Command, expr string) error {
 		return nil
 	}
 
-	if err := cmd.Eval(ctx, tokens); err != nil {
+	if err := eval(ctx, cmd, tokens); err != nil {
 		return fmt.Errorf("[eval error] %v", err.Error())
 	}
 
 	return nil
 }
 
-func (c Command) Eval(ctx context.Context, tokens []parser.Token) error {
+func eval(ctx context.Context, cmd Command, tokens []parser.Token) error {
 	argv := []string{}
 	for i, v := range tokens {
 		if v.Kind == parser.SubstitutionToken {
 			res, err := func() (string, error) {
 				var b bytes.Buffer
 				w := bufio.NewWriter(&b)
-				c := c
-				c.Env.Out = w
+				cmd := cmd
+				cmd.Stdout = w
 
 				tokens, err := parser.Parse(v.Val)
 				if err != nil {
@@ -47,7 +47,7 @@ func (c Command) Eval(ctx context.Context, tokens []parser.Token) error {
 					return "", nil
 				}
 
-				if err := c.Eval(ctx, tokens); err != nil {
+				if err := eval(ctx, cmd, tokens); err != nil {
 					return "", fmt.Errorf("[eval error] %v", err.Error())
 				}
 
@@ -65,34 +65,31 @@ func (c Command) Eval(ctx context.Context, tokens []parser.Token) error {
 		argv = append(argv, tokens[i].Val)
 	}
 
-	if err := c.Exec(ctx, argv); err != nil {
+	if err := Exec(ctx, cmd, argv); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c Command) Exec(ctx context.Context, argv []string) error {
-	argv[0] = c.Internal.GetAlias(argv[0])
+func Exec(ctx context.Context, cmd Command, argv []string) error {
+	argv[0] = cmd.Internal.GetAlias(argv[0])
 
-	if cmd, err := c.Internal.Get(argv[0]); err == nil {
-		if err := cmd.Exec(ctx, c.Env, argv[0], argv[1:]...); err != nil {
+	if cmd, err := cmd.Internal.Get(argv[0]); err == nil {
+		if err := cmd.Exec(ctx, argv[0], argv[1:]...); err != nil {
 			return fmt.Errorf("[internal exec error] %v", err.Error())
 		}
 		return nil
 	}
 
-	if err := Exec(c.Env, ctx, argv[0], argv[1:]...); err != nil {
+	if err := func() error {
+		c := exec.CommandContext(ctx, argv[0], argv[1:]...)
+		c.Stdin = cmd.Stdin
+		c.Stdout = cmd.Stdout
+		c.Stderr = cmd.Stderr
+		return c.Run()
+	}(); err != nil {
 		return fmt.Errorf("[exec error] %v", err.Error())
 	}
-
 	return nil
-}
-
-func Exec(e Env, ctx context.Context, args string, argv ...string) error {
-	cmd := exec.CommandContext(ctx, args, argv...)
-	cmd.Stdin = e.In
-	cmd.Stdout = e.Out
-	cmd.Stderr = e.Err
-	return cmd.Run()
 }

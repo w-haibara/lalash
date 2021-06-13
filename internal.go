@@ -10,7 +10,7 @@ import (
 
 type InternalCmd struct {
 	Usage string
-	Fn    func(context.Context, Env, string, ...string) error
+	Fn    func(context.Context, string, ...string) error
 }
 
 type Internal struct {
@@ -78,14 +78,14 @@ func (i Internal) Get(key string) (InternalCmd, error) {
 	return InternalCmd(cmd), nil
 }
 
-func (cmd InternalCmd) Exec(ctx context.Context, env Env, args string, argv ...string) error {
-	return cmd.Fn(ctx, env, args, argv...)
+func (cmd InternalCmd) Exec(ctx context.Context, args string, argv ...string) error {
+	return cmd.Fn(ctx, args, argv...)
 }
 
 func (cmd Command) setHelp() {
 	cmd.Internal.Cmds.Store("help", InternalCmd{
 		Usage: "help",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			var s []string
 			cmd.Internal.Cmds.Range(func(key, value interface{}) bool {
 				s = append(s, fmt.Sprintln(key, ":", value.(InternalCmd).Usage))
@@ -96,7 +96,7 @@ func (cmd Command) setHelp() {
 			for _, v := range s {
 				ret += v
 			}
-			fmt.Fprintln(e.Out, ret)
+			fmt.Fprintln(cmd.Stdout, ret)
 			return nil
 		},
 	})
@@ -105,7 +105,7 @@ func (cmd Command) setHelp() {
 func (cmd Command) setExit() {
 	cmd.Internal.Cmds.Store("exit", InternalCmd{
 		Usage: "exit",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			os.Exit(0)
 			return nil
 		},
@@ -115,7 +115,7 @@ func (cmd Command) setExit() {
 func (cmd Command) setAliasFamily() {
 	cmd.Internal.Cmds.Store("l-alias", InternalCmd{
 		Usage: "alias <alias> <command name>",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			if err := checkArgv(argv, 2); err != nil {
 				return err
 			}
@@ -126,7 +126,7 @@ func (cmd Command) setAliasFamily() {
 
 	cmd.Internal.Cmds.Store("l-unalias", InternalCmd{
 		Usage: "alias <alias> <command name>",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			if err := checkArgv(argv, 1); err != nil {
 				return err
 			}
@@ -137,9 +137,9 @@ func (cmd Command) setAliasFamily() {
 
 	cmd.Internal.Cmds.Store("l-alias-show", InternalCmd{
 		Usage: "l-alias-show",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			cmd.Internal.Alias.Range(func(key, value interface{}) bool {
-				fmt.Fprintln(e.Out, key, ":", value)
+				fmt.Fprintln(cmd.Stdout, key, ":", value)
 				return true
 			})
 			return nil
@@ -150,7 +150,7 @@ func (cmd Command) setAliasFamily() {
 func (cmd Command) setVarFamily() {
 	cmd.Internal.SetInternalCmd("l-var", InternalCmd{
 		Usage: "l-var <immutable var name> <value>",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			if err := checkArgv(argv, 2); err != nil {
 				return err
 			}
@@ -168,7 +168,7 @@ func (cmd Command) setVarFamily() {
 
 	cmd.Internal.SetInternalCmd("l-var-mut", InternalCmd{
 		Usage: "l-var-mut <mutable var name> <value>",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			if err := checkArgv(argv, 2); err != nil {
 				return err
 			}
@@ -186,7 +186,7 @@ func (cmd Command) setVarFamily() {
 
 	cmd.Internal.SetInternalCmd("l-var-ch", InternalCmd{
 		Usage: "l-var-ch <mutable var name> <new value>",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			if err := checkArgv(argv, 2); err != nil {
 				return err
 			}
@@ -203,7 +203,7 @@ func (cmd Command) setVarFamily() {
 
 	cmd.Internal.SetInternalCmd("l-var-ch", InternalCmd{
 		Usage: "l-var-ch <mutable var name> <new value>",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			if err := checkArgv(argv, 2); err != nil {
 				return err
 			}
@@ -220,7 +220,7 @@ func (cmd Command) setVarFamily() {
 
 	cmd.Internal.SetInternalCmd("l-var-ref", InternalCmd{
 		Usage: "l-var-ref <var name>",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			if err := checkArgv(argv, 1); err != nil {
 				return err
 			}
@@ -231,14 +231,14 @@ func (cmd Command) setVarFamily() {
 			if !ok {
 				return fmt.Errorf("variable is not defined: %v", argv[0])
 			}
-			fmt.Fprintln(e.Out, v)
+			fmt.Fprintln(cmd.Stdout, v)
 			return nil
 		},
 	})
 
 	cmd.Internal.SetInternalCmd("l-var-del", InternalCmd{
 		Usage: "l-var-del <var name>",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			if err := checkArgv(argv, 1); err != nil {
 				return err
 			}
@@ -250,16 +250,16 @@ func (cmd Command) setVarFamily() {
 
 	cmd.Internal.SetInternalCmd("l-var-show", InternalCmd{
 		Usage: "l-var-show",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
-			fmt.Fprintln(e.Out, "[mutable variables]")
+		Fn: func(ctx context.Context, args string, argv ...string) error {
+			fmt.Fprintln(cmd.Stdout, "[mutable variables]")
 			cmd.Internal.MutVar.Range(func(key, value interface{}) bool {
-				fmt.Fprintln(e.Out, key, ":", value)
+				fmt.Fprintln(cmd.Stdout, key, ":", value)
 				return true
 			})
 
-			fmt.Fprintln(e.Out, "\n[immutable variables]")
+			fmt.Fprintln(cmd.Stdout, "\n[immutable variables]")
 			cmd.Internal.Var.Range(func(key, value interface{}) bool {
-				fmt.Fprintln(e.Out, key, ":", value)
+				fmt.Fprintln(cmd.Stdout, key, ":", value)
 				return true
 			})
 
@@ -271,13 +271,11 @@ func (cmd Command) setVarFamily() {
 func (cmd Command) setEvalFamily() {
 	cmd.Internal.Cmds.Store("eval", InternalCmd{
 		Usage: "eval",
-		Fn: func(ctx context.Context, e Env, args string, argv ...string) error {
-			fmt.Println(argv)
+		Fn: func(ctx context.Context, args string, argv ...string) error {
 			if err := checkArgv(argv, 1); err != nil {
 				return err
 			}
-			println(argv[0])
-			Eval(ctx, cmd, argv[0])
+			EvalString(ctx, cmd, argv[0])
 			return nil
 		},
 	})

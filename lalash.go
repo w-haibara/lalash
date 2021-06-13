@@ -56,7 +56,7 @@ func RunREPL() int {
 			}
 			line.AppendHistory(expr)
 
-			return Eval(ctx, cmd, expr)
+			return EvalString(ctx, cmd, expr)
 		}(); err != nil {
 			log.Println(err.Error())
 		}
