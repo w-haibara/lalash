@@ -75,8 +75,8 @@ func eval(ctx context.Context, cmd Command, tokens []parser.Token) error {
 func Exec(ctx context.Context, cmd Command, argv []string) error {
 	argv[0] = cmd.Internal.GetAlias(argv[0])
 
-	if cmd, err := cmd.Internal.Get(argv[0]); err == nil {
-		if err := cmd.Exec(ctx, argv[0], argv[1:]...); err != nil {
+	if c, err := cmd.Internal.Get(argv[0]); err == nil {
+		if err := c.Fn(ctx, cmd, argv[0], argv[1:]...); err != nil {
 			return fmt.Errorf("[internal exec error] %v", err.Error())
 		}
 		return nil
