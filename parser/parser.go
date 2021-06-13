@@ -89,16 +89,20 @@ func Parse(expr string) ([]Token, error) {
 		return nil, errors.New(strings.Join(errs, "\n"))
 	}
 
-	for i, v := range ret {
-		if strings.HasPrefix(v.Val, "{") && strings.HasSuffix(v.Val, "}") {
-			ret[i].Kind = RawStringToken
-			ret[i].Val = strings.TrimPrefix(v.Val, "{")
-			ret[i].Val = strings.TrimSuffix(ret[i].Val, "}")
-		}
+	var err error
+
+	ret, err = ParenParser(ret, "{", "}", RawStringToken)
+	if err != nil {
+		return nil, err
+	}
+
+	ret, err = ParenParser(ret, "(", ")", SubstitutionToken)
+	if err != nil {
+		return nil, err
 	}
 
 	for i, v := range ret {
-		if v.Kind == RawStringToken {
+		if v.Kind == RawStringToken || v.Kind == StringToken {
 			continue
 		}
 		if strings.HasPrefix(v.Val, "\"") && strings.HasSuffix(v.Val, "\"") {
@@ -108,21 +112,16 @@ func Parse(expr string) ([]Token, error) {
 		}
 	}
 
-	ret, err := ParenParser(ret)
-	if err != nil {
-		return nil, err
-	}
-
 	return ret, nil
 }
 
-func ParenParser(ret []Token) ([]Token, error) {
-	tokens := []Token{}
+func ParenParser(tok []Token, start, end, kind string) ([]Token, error) {
+	res := []Token{}
 	count := 0
 	tmp := ""
-	for i := 0; i < len(ret); i++ {
-		if ret[i].Kind == StringToken || ret[i].Kind == RawStringToken {
-			tokens = append(tokens, ret[i])
+	for i := 0; i < len(tok); i++ {
+		if tok[i].Kind == StringToken || tok[i].Kind == RawStringToken {
+			res = append(res, tok[i])
 			continue
 		}
 
@@ -130,49 +129,49 @@ func ParenParser(ret []Token) ([]Token, error) {
 			r1 := false
 			r2 := false
 			for {
-				r1 = strings.HasPrefix(s, "(")
+				r1 = strings.HasPrefix(s, start)
 				if !r1 {
 					break
 				}
 				r2 = r2 || r1
 				count++
-				s = strings.TrimPrefix(s, "(")
+				s = strings.TrimPrefix(s, start)
 			}
 			return r2
-		}(ret[i].Val)
+		}(tok[i].Val)
 
 		b2 := func(s string) bool {
 			r1 := false
 			r2 := false
 			for {
-				r1 = strings.HasSuffix(s, ")")
+				r1 = strings.HasSuffix(s, end)
 				if !r1 {
 					break
 				}
 				r2 = r2 || r1
 				count--
-				s = strings.TrimSuffix(s, ")")
+				s = strings.TrimSuffix(s, end)
 			}
 			return r2
-		}(ret[i].Val)
+		}(tok[i].Val)
 
 		if b1 || b2 || count > 0 {
-			tmp = concat(tmp, ret[i].Val)
+			tmp = concat(tmp, tok[i].Val)
 		}
 
 		if count == 0 {
 			if tmp != "" {
-				tmp = strings.TrimPrefix(tmp, "(")
-				tmp = strings.TrimSuffix(tmp, ")")
+				tmp = strings.TrimPrefix(tmp, start)
+				tmp = strings.TrimSuffix(tmp, end)
 				tmp = strings.TrimSpace(tmp)
-				tokens = append(tokens, Token{
+				res = append(res, Token{
 					Val:  tmp,
-					Kind: SubstitutionToken,
+					Kind: kind,
 				})
 				tmp = ""
 				continue
 			}
-			tokens = append(tokens, ret[i])
+			res = append(res, tok[i])
 			continue
 		}
 	}
@@ -181,7 +180,7 @@ func ParenParser(ret []Token) ([]Token, error) {
 		return nil, fmt.Errorf("parentheses not terminated")
 	}
 
-	return tokens, nil
+	return res, nil
 }
 
 func concat(s1, s2 string) string {
