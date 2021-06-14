@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestEval(t *testing.T) {
+func TestEvalString(t *testing.T) {
 	tests := []struct {
 		name   string
 		expr   string
@@ -123,7 +123,7 @@ func TestEval(t *testing.T) {
 		},
 		{
 			name:   "pipe1",
-			expr:   `pipe {echo abc} cat`,
+			expr:   `l-pipe {echo abc} cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
@@ -131,7 +131,7 @@ func TestEval(t *testing.T) {
 		},
 		{
 			name:   "pipe2",
-			expr:   `pipe {pipe {echo abc} cat} cat`,
+			expr:   `l-pipe {l-pipe {echo abc} cat} cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",

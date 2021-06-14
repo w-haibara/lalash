@@ -19,8 +19,7 @@ func cmdNew() Command {
 		Stderr:   os.Stderr,
 		Internal: NewInternal(),
 	}
-	cmd.setHelp()
-	cmd.setExit()
+	cmd.setUtilFamily()
 	cmd.setAliasFamily()
 	cmd.setVarFamily()
 	cmd.setEvalFamily()

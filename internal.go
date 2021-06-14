@@ -81,9 +81,9 @@ func (i Internal) Get(key string) (InternalCmd, error) {
 	return InternalCmd(cmd), nil
 }
 
-func (cmd Command) setHelp() {
-	cmd.Internal.Cmds.Store("help", InternalCmd{
-		Usage: "help",
+func (cmd Command) setUtilFamily() {
+	cmd.Internal.Cmds.Store("l-help", InternalCmd{
+		Usage: "l-help",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
 			var s []string
 			cmd.Internal.Cmds.Range(func(key, value interface{}) bool {
@@ -99,11 +99,16 @@ func (cmd Command) setHelp() {
 			return nil
 		},
 	})
-}
+	cmd.Internal.Cmds.Store("l-echo", InternalCmd{
+		Usage: "l-echo",
+		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
+			fmt.Fprintln(cmd.Stdout, argv)
+			return nil
+		},
+	})
 
-func (cmd Command) setExit() {
-	cmd.Internal.Cmds.Store("exit", InternalCmd{
-		Usage: "exit",
+	cmd.Internal.Cmds.Store("l-exit", InternalCmd{
+		Usage: "l-exit",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
 			os.Exit(0)
 			return nil
@@ -268,16 +273,8 @@ func (cmd Command) setVarFamily() {
 }
 
 func (cmd Command) setEvalFamily() {
-	cmd.Internal.Cmds.Store("l-echo", InternalCmd{
-		Usage: "l-echo",
-		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			fmt.Fprintln(cmd.Stdout, argv)
-			return nil
-		},
-	})
-
-	cmd.Internal.Cmds.Store("eval", InternalCmd{
-		Usage: "eval",
+	cmd.Internal.Cmds.Store("l-eval", InternalCmd{
+		Usage: "l-eval",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
 			if err := checkArgv(argv, 1); err != nil {
 				return err
@@ -289,8 +286,8 @@ func (cmd Command) setEvalFamily() {
 		},
 	})
 
-	cmd.Internal.Cmds.Store("pipe", InternalCmd{
-		Usage: "pipe",
+	cmd.Internal.Cmds.Store("l-pipe", InternalCmd{
+		Usage: "l-pipe",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
 			if err := checkArgv(argv, 2); err != nil {
 				return err
