@@ -90,6 +90,12 @@ func Parse(expr string) ([]Token, error) {
 		return nil, errors.New(strings.Join(errs, "\n"))
 	}
 
+	for i, v := range ret {
+		if strings.HasPrefix(v.Val, "#") {
+			ret = ret[:i]
+		}
+	}
+
 	var err error
 
 	ret, err = ParenParser(ret, "{", "}", RawStringToken)

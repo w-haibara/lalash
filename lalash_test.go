@@ -74,6 +74,14 @@ func TestEval(t *testing.T) {
 			err:    nil,
 		},
 		{
+			name:   "comment1",
+			expr:   `echo abc #this is a comment message`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
 			name:   "stdin1",
 			expr:   "wc",
 			stdin:  "abc",
