@@ -17,18 +17,34 @@ func EvalString(ctx context.Context, cmd Command, expr string) error {
 		return fmt.Errorf("[parse error] %v", err.Error())
 	}
 
-	if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
-		return nil
-	}
+	start := 0
+	for i := 1; i <= len(tokens); i++ {
+		if tokens[i-1].Kind == parser.SplitToken {
+			if err := eval(ctx, cmd, tokens[start:i-1]); err != nil {
+				return fmt.Errorf("[eval error] %v", err.Error())
+			}
+			start = i
+			if start >= len(tokens) {
+				break
+			}
+			continue
+		}
 
-	if err := eval(ctx, cmd, tokens); err != nil {
-		return fmt.Errorf("[eval error] %v", err.Error())
+		if i == len(tokens) {
+			if err := eval(ctx, cmd, tokens[start:i]); err != nil {
+				return fmt.Errorf("[eval error] %v", err.Error())
+			}
+		}
 	}
 
 	return nil
 }
 
 func eval(ctx context.Context, cmd Command, tokens []parser.Token) error {
+	if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
+		return nil
+	}
+
 	argv := []string{}
 	for i, v := range tokens {
 		if v.Kind == parser.SubstitutionToken {

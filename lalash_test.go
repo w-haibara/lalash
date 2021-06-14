@@ -34,6 +34,46 @@ func TestEval(t *testing.T) {
 			err:    nil,
 		},
 		{
+			name:   "raw-string literal1",
+			expr:   `echo {a b c}`,
+			stdin:  "",
+			stdout: "a b c\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "split1",
+			expr:   `echo abc;`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "split2",
+			expr:   `echo abc; echo def`,
+			stdin:  "",
+			stdout: "abc\ndef\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "split3",
+			expr:   `echo abc ; echo def`,
+			stdin:  "",
+			stdout: "abc\ndef\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "split4",
+			expr:   `echo abc;echo def`,
+			stdin:  "",
+			stdout: "abc;echo def\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
 			name:   "stdin1",
 			expr:   "wc",
 			stdin:  "abc",
@@ -116,11 +156,11 @@ func TestEval(t *testing.T) {
 			e.Flush()
 
 			if got := out.String(); got != tt.stdout {
-				t.Errorf("\n=== Stdout ===\n%q\n---  want  ---\n%q\n--------------", got, tt.stdout)
+				t.Errorf("Command: %q\n=== Stdout ===\n%q\n---  want  ---\n%q\n--------------", tt.expr, got, tt.stdout)
 			}
 
 			if got := err.String(); got != tt.stderr {
-				t.Errorf("\n=== Stderr ===\n%q\n---  want  ---\n%q\n--------------", got, tt.stderr)
+				t.Errorf("Command: %q\n=== Stderr ===\n%q\n---  want  ---\n%q\n--------------", tt.expr, got, tt.stderr)
 			}
 		})
 	}

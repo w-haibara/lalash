@@ -12,6 +12,7 @@ const (
 	StringToken       = "string"
 	RawStringToken    = "raw-string"
 	SubstitutionToken = "substitution"
+	SplitToken        = "split"
 )
 
 type Token struct {
@@ -109,6 +110,19 @@ func Parse(expr string) ([]Token, error) {
 			ret[i].Kind = StringToken
 			ret[i].Val = strings.TrimPrefix(v.Val, "\"")
 			ret[i].Val = strings.TrimSuffix(ret[i].Val, "\"")
+		}
+	}
+
+	for i, v := range ret {
+		if strings.HasSuffix(v.Val, ";") {
+			ret[i].Val = strings.TrimSuffix(ret[i].Val, ";")
+			if ret[i].Val == "" {
+				ret[i] = Token{Kind: SplitToken}
+				break
+			}
+			ret = append(ret, Token{})
+			copy(ret[i+2:], ret[i+1:])
+			ret[i+1] = Token{Kind: SplitToken}
 		}
 	}
 
