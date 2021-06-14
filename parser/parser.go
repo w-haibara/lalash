@@ -103,7 +103,7 @@ func Parse(expr string) ([]Token, error) {
 	}
 
 	for i, v := range ret {
-		if v.Kind == RawStringToken || v.Kind == StringToken {
+		if v.Kind == RawStringToken {
 			continue
 		}
 		if strings.HasPrefix(v.Val, "\"") && strings.HasSuffix(v.Val, "\"") {
