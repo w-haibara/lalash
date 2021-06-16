@@ -108,7 +108,7 @@ func Parse(expr string) ([]Token, error) {
 			ret = append(ret, Token{})
 			copy(ret[i+2:], ret[i+1:])
 			ret[i+1] = Token{Kind: SplitToken}
-			i = 0
+			i -= 1
 			continue
 		}
 	}
