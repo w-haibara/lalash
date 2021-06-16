@@ -19,7 +19,7 @@ func EvalString(ctx context.Context, cmd Command, expr string) error {
 
 	start := 0
 	for i := 1; i <= len(tokens); i++ {
-		if tokens[i-1].Kind == parser.SplitToken {
+		if tokens[i-1].Kind == parser.SeparateToken {
 			if err := eval(ctx, cmd, tokens[start:i-1]); err != nil {
 				return fmt.Errorf("[eval error] %v", err.Error())
 			}
