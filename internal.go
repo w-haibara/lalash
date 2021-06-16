@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"sort"
@@ -118,37 +119,53 @@ func (cmd Command) setUtilFamily() {
 
 func (cmd Command) setAliasFamily() {
 	cmd.Internal.Cmds.Store("l-alias", InternalCmd{
-		Usage: "alias <alias> <command name>",
+		Usage: "",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			if err := checkArgv(argv, 2); err != nil {
+
+			f := flag.NewFlagSet("alias", flag.ContinueOnError)
+			isUnset := f.Bool("unset", false, "")
+			isShow := f.Bool("show", false, "")
+			key := f.String("k", "", "")
+			val := f.String("v", "", "")
+			if err := f.Parse(argv); err != nil {
 				return err
 			}
-			cmd.Internal.Alias.Store(argv[0], argv[1])
+
+			if *isUnset && *isShow {
+				return fmt.Errorf("cannot set both --unset and --show.")
+			}
+
+			if !*isUnset && !*isShow {
+				if *key == "" {
+					return fmt.Errorf("key is blank")
+				}
+				if *val == "" {
+					return fmt.Errorf("value is blank")
+				}
+				cmd.Internal.Alias.Store(*key, *val)
+				return nil
+			}
+
+			if *isUnset {
+				if *key == "" {
+					return fmt.Errorf("key is blank")
+				}
+				cmd.Internal.Alias.Delete(*key)
+				return nil
+			}
+
+			if *isShow {
+				cmd.Internal.Alias.Range(func(key, value interface{}) bool {
+					fmt.Fprintln(cmd.Stdout, key, ":", value)
+					return true
+				})
+				return nil
+			}
+
 			return nil
 		},
 	})
 
-	cmd.Internal.Cmds.Store("l-unalias", InternalCmd{
-		Usage: "alias <alias> <command name>",
-		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			if err := checkArgv(argv, 1); err != nil {
-				return err
-			}
-			cmd.Internal.Alias.Delete(argv[0])
-			return nil
-		},
-	})
-
-	cmd.Internal.Cmds.Store("l-alias-show", InternalCmd{
-		Usage: "l-alias-show",
-		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			cmd.Internal.Alias.Range(func(key, value interface{}) bool {
-				fmt.Fprintln(cmd.Stdout, key, ":", value)
-				return true
-			})
-			return nil
-		},
-	})
 }
 
 func (cmd Command) setVarFamily() {

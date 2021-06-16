@@ -121,6 +121,24 @@ func TestEvalString(t *testing.T) {
 			stderr: "",
 			err:    nil,
 		},
+
+		{
+			name:   "alias1",
+			expr:   `l-alias -k aaa -v {echo bbb} ; aaa`,
+			stdin:  "",
+			stdout: "bbb\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "alias2",
+			expr:   `l-alias -k aaa -v xxx; l-alias -k bbb -v yyy; l-alias --show`,
+			stdin:  "",
+			stdout: "aaa : xxx\nbbb : yyy\n",
+			stderr: "",
+			err:    nil,
+		},
+
 		{
 			name:   "pipe1",
 			expr:   `l-pipe {echo abc} cat`,
