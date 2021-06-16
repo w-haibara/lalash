@@ -124,7 +124,7 @@ func TestEvalString(t *testing.T) {
 
 		{
 			name:   "alias1",
-			expr:   `l-alias -k aaa -v {echo bbb} ; aaa`,
+			expr:   `l-alias -k aaa -v {echo bbb}; aaa`,
 			stdin:  "",
 			stdout: "bbb\n",
 			stderr: "",
