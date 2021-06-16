@@ -96,16 +96,20 @@ func Parse(expr string) ([]Token, error) {
 		}
 	}
 
-	for i, v := range ret {
-		if strings.HasSuffix(v.Val, ";") {
+	for i := 0; i < len(ret); i++ {
+		if strings.HasSuffix(ret[i].Val, ";") {
 			ret[i].Val = strings.TrimSuffix(ret[i].Val, ";")
+
 			if ret[i].Val == "" {
 				ret[i] = Token{Kind: SplitToken}
 				break
 			}
+
 			ret = append(ret, Token{})
 			copy(ret[i+2:], ret[i+1:])
 			ret[i+1] = Token{Kind: SplitToken}
+			i = 0
+			continue
 		}
 	}
 
@@ -131,6 +135,7 @@ func Parse(expr string) ([]Token, error) {
 			ret[i].Val = strings.TrimSuffix(ret[i].Val, "\"")
 		}
 	}
+
 	return ret, nil
 }
 
