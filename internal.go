@@ -125,8 +125,6 @@ func (cmd Command) setAliasFamily() {
 			f := flag.NewFlagSet("alias", flag.ContinueOnError)
 			isUnset := f.Bool("unset", false, "")
 			isShow := f.Bool("show", false, "")
-			key := f.String("k", "", "")
-			val := f.String("v", "", "")
 			if err := f.Parse(argv); err != nil {
 				return err
 			}
@@ -136,21 +134,21 @@ func (cmd Command) setAliasFamily() {
 			}
 
 			if !*isUnset && !*isShow {
-				if *key == "" {
+				if f.Arg(0) == "" {
 					return fmt.Errorf("key is blank")
 				}
-				if *val == "" {
+				if f.Arg(1) == "" {
 					return fmt.Errorf("value is blank")
 				}
-				cmd.Internal.Alias.Store(*key, *val)
+				cmd.Internal.Alias.Store(f.Arg(0), f.Arg(1))
 				return nil
 			}
 
 			if *isUnset {
-				if *key == "" {
+				if f.Arg(0) == "" {
 					return fmt.Errorf("key is blank")
 				}
-				cmd.Internal.Alias.Delete(*key)
+				cmd.Internal.Alias.Delete(f.Arg(0))
 				return nil
 			}
 

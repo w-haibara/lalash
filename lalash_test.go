@@ -74,6 +74,22 @@ func TestEvalString(t *testing.T) {
 			err:    nil,
 		},
 		{
+			name:   "split5",
+			expr:   `echo abc; echo def; echo ghi`,
+			stdin:  "",
+			stdout: "abc\ndef\nghi\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "split6",
+			expr:   `echo abc def; echo ghi jkl; echo mno`,
+			stdin:  "",
+			stdout: "abc def\nghi jkl\nmno\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
 			name:   "comment1",
 			expr:   `echo abc #this is a comment message`,
 			stdin:  "",
@@ -121,10 +137,9 @@ func TestEvalString(t *testing.T) {
 			stderr: "",
 			err:    nil,
 		},
-
 		{
 			name:   "alias1",
-			expr:   `l-alias -k aaa -v {echo bbb}; aaa`,
+			expr:   `l-alias aaa {echo bbb}; aaa`,
 			stdin:  "",
 			stdout: "bbb\n",
 			stderr: "",
@@ -132,13 +147,12 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "alias2",
-			expr:   `l-alias -k aaa -v xxx; l-alias -k bbb -v yyy; l-alias --show`,
+			expr:   `l-alias aaa xxx; l-alias bbb yyy; l-alias --show`,
 			stdin:  "",
 			stdout: "aaa : xxx\nbbb : yyy\n",
 			stderr: "",
 			err:    nil,
 		},
-
 		{
 			name:   "pipe1",
 			expr:   `l-pipe {echo abc} cat`,
