@@ -136,7 +136,6 @@ func (cmd Command) setAliasFamily() {
 	cmd.Internal.Cmds.Store("l-alias", InternalCmd{
 		Usage: "",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-
 			f := flag.NewFlagSet("alias", flag.ContinueOnError)
 			isUnset := f.Bool("unset", false, "")
 			isShow := f.Bool("show", false, "")
@@ -183,119 +182,128 @@ func (cmd Command) setAliasFamily() {
 
 func (cmd Command) setVarFamily() {
 	cmd.Internal.SetInternalCmd("l-var", InternalCmd{
-		Usage: "l-var <immutable var name> <value>",
+		Usage: "l-var",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			if err := checkArgv(argv, 2); err != nil {
+			f := flag.NewFlagSet("var", flag.ContinueOnError)
+			isMut := f.Bool("mut", false, "")
+			isRef := f.Bool("ref", false, "")
+			isCh := f.Bool("ch", false, "")
+			isDel := f.Bool("del", false, "")
+			isShow := f.Bool("show", false, "")
+			if err := f.Parse(argv); err != nil {
 				return err
 			}
-			_, ok := cmd.Internal.Var.Load(argv[0])
-			if !ok {
-				_, ok = cmd.Internal.MutVar.Load(argv[0])
-			}
-			if ok {
-				return fmt.Errorf("variable is already exists: %v", argv[0])
-			}
-			cmd.Internal.Var.Store(argv[0], argv[1])
-			return nil
-		},
-	})
 
-	cmd.Internal.SetInternalCmd("l-var-mut", InternalCmd{
-		Usage: "l-var-mut <mutable var name> <value>",
-		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			if err := checkArgv(argv, 2); err != nil {
-				return err
+			if *isMut && (*isRef || *isCh || *isDel || *isShow) {
+				return fmt.Errorf("cannot set --mut and others")
 			}
-			_, ok := cmd.Internal.Var.Load(argv[0])
-			if !ok {
-				_, ok = cmd.Internal.MutVar.Load(argv[0])
-			}
-			if ok {
-				return fmt.Errorf("variable is already exists: %v", argv[0])
-			}
-			cmd.Internal.MutVar.Store(argv[0], argv[1])
-			return nil
-		},
-	})
 
-	cmd.Internal.SetInternalCmd("l-var-ch", InternalCmd{
-		Usage: "l-var-ch <mutable var name> <new value>",
-		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			if err := checkArgv(argv, 2); err != nil {
-				return err
+			if *isRef && (*isCh || *isDel || *isShow) {
+				return fmt.Errorf("cannot set --ref and others")
 			}
-			if _, ok := cmd.Internal.Var.Load(argv[0]); ok {
-				return fmt.Errorf("variable is immutable: %v", argv[1])
-			}
-			if _, ok := cmd.Internal.MutVar.Load(argv[0]); !ok {
-				return fmt.Errorf("variable is not defined: %v", argv[1])
-			}
-			cmd.Internal.MutVar.Store(argv[0], argv[1])
-			return nil
-		},
-	})
 
-	cmd.Internal.SetInternalCmd("l-var-ch", InternalCmd{
-		Usage: "l-var-ch <mutable var name> <new value>",
-		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			if err := checkArgv(argv, 2); err != nil {
-				return err
+			if *isCh && (*isDel || *isShow) {
+				return fmt.Errorf("cannot set --ch and others")
 			}
-			if _, ok := cmd.Internal.Var.Load(argv[0]); ok {
-				return fmt.Errorf("variable is immutable: %v", argv[1])
+			if *isDel && *isShow {
+				return fmt.Errorf("cannot set both --del and --show")
 			}
-			if _, ok := cmd.Internal.MutVar.Load(argv[0]); !ok {
-				return fmt.Errorf("variable is not defined: %v", argv[1])
-			}
-			cmd.Internal.MutVar.Store(argv[0], argv[1])
-			return nil
-		},
-	})
 
-	cmd.Internal.SetInternalCmd("l-var-ref", InternalCmd{
-		Usage: "l-var-ref <var name>",
-		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			if err := checkArgv(argv, 1); err != nil {
-				return err
-			}
-			v, ok := cmd.Internal.Var.Load(argv[0])
-			if !ok {
-				v, ok = cmd.Internal.MutVar.Load(argv[0])
-			}
-			if !ok {
-				return fmt.Errorf("variable is not defined: %v", argv[0])
-			}
-			fmt.Fprintln(cmd.Stdout, v)
-			return nil
-		},
-	})
+			if !*isMut && !*isRef && !*isCh && !*isDel && !*isShow {
+				if f.Arg(0) == "" {
+					return fmt.Errorf("key is blank")
+				}
+				if f.Arg(1) == "" {
+					return fmt.Errorf("value is blank")
+				}
 
-	cmd.Internal.SetInternalCmd("l-var-del", InternalCmd{
-		Usage: "l-var-del <var name>",
-		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			if err := checkArgv(argv, 1); err != nil {
-				return err
+				_, ok := cmd.Internal.Var.Load(f.Arg(0))
+				if !ok {
+					_, ok = cmd.Internal.MutVar.Load(f.Arg(0))
+				}
+				if ok {
+					return fmt.Errorf("variable is already exists: %v", f.Arg(0))
+				}
+				cmd.Internal.Var.Store(f.Arg(0), f.Arg(1))
+				return nil
 			}
-			cmd.Internal.Var.Delete(argv[0])
-			cmd.Internal.MutVar.Delete(argv[0])
-			return nil
-		},
-	})
 
-	cmd.Internal.SetInternalCmd("l-var-show", InternalCmd{
-		Usage: "l-var-show",
-		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			fmt.Fprintln(cmd.Stdout, "[mutable variables]")
-			cmd.Internal.MutVar.Range(func(key, value interface{}) bool {
-				fmt.Fprintln(cmd.Stdout, key, ":", value)
-				return true
-			})
+			if *isMut && !*isRef && !*isCh && !*isDel && !*isShow {
+				if f.Arg(0) == "" {
+					return fmt.Errorf("key is blank")
+				}
+				if f.Arg(1) == "" {
+					return fmt.Errorf("value is blank")
+				}
 
-			fmt.Fprintln(cmd.Stdout, "\n[immutable variables]")
-			cmd.Internal.Var.Range(func(key, value interface{}) bool {
-				fmt.Fprintln(cmd.Stdout, key, ":", value)
-				return true
-			})
+				_, ok := cmd.Internal.Var.Load(f.Arg(0))
+				if !ok {
+					_, ok = cmd.Internal.MutVar.Load(f.Arg(0))
+				}
+				if ok {
+					return fmt.Errorf("variable is already exists: %v", f.Arg(0))
+				}
+				cmd.Internal.MutVar.Store(f.Arg(0), f.Arg(1))
+				return nil
+			}
+
+			if !*isMut && *isRef && !*isCh && !*isDel && !*isShow {
+				if f.Arg(0) == "" {
+					return fmt.Errorf("key is blank")
+				}
+
+				v, ok := cmd.Internal.Var.Load(f.Arg(0))
+				if !ok {
+					v, ok = cmd.Internal.MutVar.Load(f.Arg(0))
+				}
+				if !ok {
+					return fmt.Errorf("variable is not defined: %v", f.Arg(0))
+				}
+				fmt.Fprintln(cmd.Stdout, v)
+				return nil
+			}
+
+			if !*isMut && !*isRef && *isCh && !*isDel && !*isShow {
+				if f.Arg(0) == "" {
+					return fmt.Errorf("key is blank")
+				}
+
+				if _, ok := cmd.Internal.Var.Load(f.Arg(0)); ok {
+					return fmt.Errorf("variable is immutable: %v", f.Arg(0))
+				}
+				if _, ok := cmd.Internal.MutVar.Load(f.Arg(0)); !ok {
+					return fmt.Errorf("variable is not defined: %v", f.Arg(0))
+				}
+				cmd.Internal.MutVar.Store(f.Arg(0), f.Arg(1))
+				return nil
+			}
+
+			if !*isMut && !*isRef && !*isCh && *isDel && !*isShow {
+				if f.Arg(0) == "" {
+					return fmt.Errorf("key is blank")
+				}
+
+				cmd.Internal.Var.Delete(f.Arg(0))
+				cmd.Internal.MutVar.Delete(f.Arg(0))
+				return nil
+			}
+
+			if !*isMut && !*isRef && !*isCh && !*isDel && *isShow {
+
+				fmt.Fprintln(cmd.Stdout, "[mutable variables]")
+				cmd.Internal.MutVar.Range(func(key, value interface{}) bool {
+					fmt.Fprintln(cmd.Stdout, key, ":", value)
+					return true
+				})
+
+				fmt.Fprintln(cmd.Stdout, "\n[immutable variables]")
+				cmd.Internal.Var.Range(func(key, value interface{}) bool {
+					fmt.Fprintln(cmd.Stdout, key, ":", value)
+					return true
+				})
+
+				return nil
+			}
 
 			return nil
 		},

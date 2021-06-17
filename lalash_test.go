@@ -154,6 +154,34 @@ func TestEvalString(t *testing.T) {
 		},
 
 		/*
+			var
+		*/
+		{
+			name:   "var1",
+			expr:   `l-var aaa xxx; echo (l-var --ref aaa)`,
+			stdin:  "",
+			stdout: "xxx\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "var2",
+			expr:   `l-var --mut aaa xxx; l-var --ch aaa yyy; echo (l-var --ref aaa)`,
+			stdin:  "",
+			stdout: "yyy\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "var3",
+			expr:   `l-var aaa zzz; l-var --del aaa; l-var --mut aaa xxx; l-var --ch aaa yyy; echo (l-var --ref aaa)`,
+			stdin:  "",
+			stdout: "yyy\n",
+			stderr: "",
+			err:    nil,
+		},
+
+		/*
 			alias
 		*/
 		{
