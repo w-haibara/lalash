@@ -156,7 +156,8 @@ func (cmd Command) setAliasFamily() {
 				return fmt.Errorf("cannot set both --unset and --show.")
 			}
 
-			if !*isUnset && !*isShow {
+			switch {
+			case !*isUnset && !*isShow:
 				if f.Arg(0) == "" {
 					return fmt.Errorf("key is blank")
 				}
@@ -165,17 +166,15 @@ func (cmd Command) setAliasFamily() {
 				}
 				cmd.Internal.Alias.Store(f.Arg(0), f.Arg(1))
 				return nil
-			}
 
-			if *isUnset {
+			case *isUnset:
 				if f.Arg(0) == "" {
 					return fmt.Errorf("key is blank")
 				}
 				cmd.Internal.Alias.Delete(f.Arg(0))
 				return nil
-			}
 
-			if *isShow {
+			case *isShow:
 				s := []string{}
 				cmd.Internal.Alias.Range(func(key, value interface{}) bool {
 					s = append(s, fmt.Sprintf("%v : %v", key, value))
@@ -220,7 +219,8 @@ func (cmd Command) setVarFamily() {
 				return fmt.Errorf("cannot set both --del and --show")
 			}
 
-			if !*isMut && !*isRef && !*isCh && !*isDel && !*isShow {
+			switch {
+			case !*isMut && !*isRef && !*isCh && !*isDel && !*isShow:
 				if f.Arg(0) == "" {
 					return fmt.Errorf("key is blank")
 				}
@@ -237,9 +237,8 @@ func (cmd Command) setVarFamily() {
 				}
 				cmd.Internal.Var.Store(f.Arg(0), f.Arg(1))
 				return nil
-			}
 
-			if *isMut && !*isRef && !*isCh && !*isDel && !*isShow {
+			case *isMut && !*isRef && !*isCh && !*isDel && !*isShow:
 				if f.Arg(0) == "" {
 					return fmt.Errorf("key is blank")
 				}
@@ -256,9 +255,8 @@ func (cmd Command) setVarFamily() {
 				}
 				cmd.Internal.MutVar.Store(f.Arg(0), f.Arg(1))
 				return nil
-			}
 
-			if !*isMut && *isRef && !*isCh && !*isDel && !*isShow {
+			case !*isMut && *isRef && !*isCh && !*isDel && !*isShow:
 				if f.Arg(0) == "" {
 					return fmt.Errorf("key is blank")
 				}
@@ -272,9 +270,8 @@ func (cmd Command) setVarFamily() {
 				}
 				fmt.Fprintln(cmd.Stdout, v)
 				return nil
-			}
 
-			if !*isMut && !*isRef && *isCh && !*isDel && !*isShow {
+			case !*isMut && !*isRef && *isCh && !*isDel && !*isShow:
 				if f.Arg(0) == "" {
 					return fmt.Errorf("key is blank")
 				}
@@ -287,9 +284,8 @@ func (cmd Command) setVarFamily() {
 				}
 				cmd.Internal.MutVar.Store(f.Arg(0), f.Arg(1))
 				return nil
-			}
 
-			if !*isMut && !*isRef && !*isCh && *isDel && !*isShow {
+			case !*isMut && !*isRef && !*isCh && *isDel && !*isShow:
 				if f.Arg(0) == "" {
 					return fmt.Errorf("key is blank")
 				}
@@ -297,9 +293,8 @@ func (cmd Command) setVarFamily() {
 				cmd.Internal.Var.Delete(f.Arg(0))
 				cmd.Internal.MutVar.Delete(f.Arg(0))
 				return nil
-			}
 
-			if !*isMut && !*isRef && !*isCh && !*isDel && *isShow {
+			case !*isMut && !*isRef && !*isCh && !*isDel && *isShow:
 				fmt.Fprintln(cmd.Stdout, "[mutable variables]")
 				s1 := []string{}
 				cmd.Internal.MutVar.Range(func(key, value interface{}) bool {
