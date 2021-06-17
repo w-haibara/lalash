@@ -82,6 +82,15 @@ func (i Internal) Get(key string) (InternalCmd, error) {
 	return InternalCmd(cmd), nil
 }
 
+func sortJoin(s []string) string {
+	sort.Strings(s)
+	ret := ""
+	for _, v := range s {
+		ret += v + "\n"
+	}
+	return ret
+}
+
 func (cmd Command) setUtilFamily() {
 	cmd.Internal.Cmds.Store("l-help", InternalCmd{
 		Usage: "l-help",
@@ -167,10 +176,12 @@ func (cmd Command) setAliasFamily() {
 			}
 
 			if *isShow {
+				s := []string{}
 				cmd.Internal.Alias.Range(func(key, value interface{}) bool {
-					fmt.Fprintln(cmd.Stdout, key, ":", value)
+					s = append(s, fmt.Sprintf("%v : %v", key, value))
 					return true
 				})
+				fmt.Fprint(cmd.Stdout, sortJoin(s))
 				return nil
 			}
 
@@ -289,18 +300,21 @@ func (cmd Command) setVarFamily() {
 			}
 
 			if !*isMut && !*isRef && !*isCh && !*isDel && *isShow {
-
 				fmt.Fprintln(cmd.Stdout, "[mutable variables]")
+				s1 := []string{}
 				cmd.Internal.MutVar.Range(func(key, value interface{}) bool {
 					fmt.Fprintln(cmd.Stdout, key, ":", value)
 					return true
 				})
+				fmt.Fprint(cmd.Stdout, sortJoin(s1))
 
 				fmt.Fprintln(cmd.Stdout, "\n[immutable variables]")
+				s2 := []string{}
 				cmd.Internal.Var.Range(func(key, value interface{}) bool {
 					fmt.Fprintln(cmd.Stdout, key, ":", value)
 					return true
 				})
+				fmt.Fprint(cmd.Stdout, sortJoin(s2))
 
 				return nil
 			}
