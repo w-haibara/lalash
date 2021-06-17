@@ -16,6 +16,20 @@ const (
 	exitCodeErr
 )
 
+func Run(expr string) int {
+	cmd := cmdNew()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := EvalString(ctx, cmd, expr); err != nil {
+		fmt.Println(err.Error())
+		return exitCodeErr
+	}
+
+	return exitCodeOK
+}
+
 func RunREPL() int {
 	cmd := cmdNew()
 
