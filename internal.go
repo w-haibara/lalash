@@ -100,10 +100,25 @@ func (cmd Command) setUtilFamily() {
 			return nil
 		},
 	})
+
 	cmd.Internal.Cmds.Store("l-echo", InternalCmd{
 		Usage: "l-echo",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			fmt.Fprintln(cmd.Stdout, argv)
+			fmt.Fprintln(cmd.Stdout, strings.Join(argv, " "))
+			return nil
+		},
+	})
+
+	cmd.Internal.Cmds.Store("l-cat", InternalCmd{
+		Usage: "l-cat",
+		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
+			r := bufio.NewScanner(cmd.Stdin)
+			for r.Scan() {
+				if err := r.Err(); err != nil {
+					fmt.Fprintln(cmd.Stderr, err)
+				}
+				fmt.Fprintln(cmd.Stdout, r.Text())
+			}
 			return nil
 		},
 	})

@@ -17,17 +17,36 @@ func TestEvalString(t *testing.T) {
 		stderr string
 		err    error
 	}{
+		/*
+			basic echo
+		*/
 		{
 			name:   "echo1",
-			expr:   "echo abc",
+			expr:   "l-echo abc",
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
 			err:    nil,
 		},
+
+		/*
+			basic cat
+		*/
+		{
+			name:   "cat1",
+			expr:   "l-cat",
+			stdin:  "abc",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+
+		/*
+			string literal
+		*/
 		{
 			name:   "string literal1",
-			expr:   `echo "a b c"`,
+			expr:   `l-echo "a b c"`,
 			stdin:  "",
 			stdout: "a b c\n",
 			stderr: "",
@@ -35,87 +54,83 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "raw-string literal1",
-			expr:   `echo {a b c}`,
+			expr:   `l-echo {a b c}`,
 			stdin:  "",
 			stdout: "a b c\n",
 			stderr: "",
 			err:    nil,
 		},
+
+		/*
+			separate
+		*/
 		{
-			name:   "split1",
-			expr:   `echo abc;`,
+			name:   "separate1",
+			expr:   `l-echo abc;`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
 			err:    nil,
 		},
 		{
-			name:   "split2",
-			expr:   `echo abc; echo def`,
+			name:   "separate2",
+			expr:   `l-echo abc; l-echo def`,
 			stdin:  "",
 			stdout: "abc\ndef\n",
 			stderr: "",
 			err:    nil,
 		},
 		{
-			name:   "split3",
-			expr:   `echo abc ; echo def`,
+			name:   "separate3",
+			expr:   `l-echo abc ; l-echo def`,
 			stdin:  "",
 			stdout: "abc\ndef\n",
 			stderr: "",
 			err:    nil,
 		},
 		{
-			name:   "split4",
-			expr:   `echo abc;echo def`,
+			name:   "separate4",
+			expr:   `l-echo abc;l-echo def`,
 			stdin:  "",
-			stdout: "abc;echo def\n",
+			stdout: "abc;l-echo def\n",
 			stderr: "",
 			err:    nil,
 		},
 		{
-			name:   "split5",
-			expr:   `echo abc; echo def; echo ghi`,
+			name:   "separate5",
+			expr:   `l-echo abc; l-echo def; l-echo ghi`,
 			stdin:  "",
 			stdout: "abc\ndef\nghi\n",
 			stderr: "",
 			err:    nil,
 		},
 		{
-			name:   "split6",
-			expr:   `echo abc def; echo ghi jkl; echo mno`,
+			name:   "separate6",
+			expr:   `l-echo abc def; l-echo ghi jkl; l-echo mno`,
 			stdin:  "",
 			stdout: "abc def\nghi jkl\nmno\n",
 			stderr: "",
 			err:    nil,
 		},
+
+		/*
+			comment
+		*/
 		{
 			name:   "comment1",
-			expr:   `echo abc #this is a comment message`,
+			expr:   `l-echo abc #this is a comment message`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
 			err:    nil,
 		},
-		{
-			name:   "stdin1",
-			expr:   "wc",
-			stdin:  "abc",
-			stdout: "      0       1       3\n",
-			stderr: "",
-			err:    nil,
-		},
-		{
-			name:   "stdin2",
-			expr:   "grep a",
-			stdin:  "abc",
-			stdout: "abc\n",
-			stderr: "",
-			err:    nil,
-		},
+
+		/*
+			command substitution
+		*/
 		{
 			name:   "substitution1",
-			expr:   `echo (echo abc)`,
+			expr:   `l-echo (l-echo abc)`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
@@ -123,7 +138,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "substitution2",
-			expr:   `echo (echo abc) (echo def)`,
+			expr:   `l-echo (l-echo abc) (l-echo def)`,
 			stdin:  "",
 			stdout: "abc def\n",
 			stderr: "",
@@ -131,15 +146,19 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "substitution3",
-			expr:   `echo (echo (echo abc))`,
+			expr:   `l-echo (l-echo (l-echo abc))`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
 			err:    nil,
 		},
+
+		/*
+			alias
+		*/
 		{
 			name:   "alias1",
-			expr:   `l-alias aaa {echo bbb}; aaa`,
+			expr:   `l-alias aaa {l-echo bbb}; aaa`,
 			stdin:  "",
 			stdout: "bbb\n",
 			stderr: "",
@@ -153,9 +172,13 @@ func TestEvalString(t *testing.T) {
 			stderr: "",
 			err:    nil,
 		},
+
+		/*
+			pipe
+		*/
 		{
 			name:   "pipe1",
-			expr:   `l-pipe {echo abc} cat`,
+			expr:   `l-pipe {l-echo abc} cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
@@ -163,7 +186,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "pipe2",
-			expr:   `l-pipe {l-pipe {echo abc} cat} cat`,
+			expr:   `l-pipe {l-pipe {l-echo abc} cat} cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
