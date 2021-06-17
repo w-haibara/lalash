@@ -222,23 +222,23 @@ func TestEvalString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		cmd := cmdNew()
-
-		i := strings.NewReader(tt.stdin)
-		cmd.Stdin = i
-
-		var out bytes.Buffer
-		o := bufio.NewWriter(&out)
-		cmd.Stdout = o
-
-		var err bytes.Buffer
-		e := bufio.NewWriter(&err)
-		cmd.Stderr = e
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
 		t.Run(tt.name, func(t *testing.T) {
+			cmd := cmdNew()
+
+			i := strings.NewReader(tt.stdin)
+			cmd.Stdin = i
+
+			var out bytes.Buffer
+			o := bufio.NewWriter(&out)
+			cmd.Stdout = o
+
+			var err bytes.Buffer
+			e := bufio.NewWriter(&err)
+			cmd.Stderr = e
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
 			if err := EvalString(ctx, cmd, tt.expr); err != tt.err {
 				t.Errorf(err.Error())
 			}
