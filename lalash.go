@@ -1,9 +1,12 @@
 package lalash
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/peterh/liner"
@@ -16,7 +19,7 @@ const (
 	exitCodeErr
 )
 
-func Run(expr string) int {
+func RunCommand(expr string) int {
 	cmd := cmdNew()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -28,6 +31,32 @@ func Run(expr string) int {
 	}
 
 	return exitCodeOK
+}
+
+func RunScript(script io.Reader) int {
+	cmd := cmdNew()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	s := bufio.NewScanner(script)
+	for s.Scan() {
+		if err := EvalString(ctx, cmd, s.Text()); err != nil {
+			fmt.Println(err.Error())
+			return exitCodeErr
+		}
+	}
+
+	return exitCodeOK
+}
+
+func RunScriptFile(filename string) int {
+	f, err := os.Open(filename)
+	if err != nil {
+		fmt.Println(err)
+		return exitCodeErr
+	}
+	return RunScript(f)
 }
 
 func RunREPL() int {
