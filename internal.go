@@ -112,7 +112,17 @@ func (cmd Command) setUtilFamily() {
 	cmd.Internal.Cmds.Store("l-echo", InternalCmd{
 		Usage: "l-echo",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			fmt.Fprintln(cmd.Stdout, strings.Join(argv, " "))
+			f := flag.NewFlagSet("echo", flag.ContinueOnError)
+			isErr := f.Bool("err", false, "")
+			if err := f.Parse(argv); err != nil {
+				return err
+			}
+
+			out := cmd.Stdout
+			if *isErr {
+				out = cmd.Stderr
+			}
+			fmt.Fprintln(out, strings.Join(f.Args(), " "))
 			return nil
 		},
 	})
@@ -334,23 +344,38 @@ func (cmd Command) setEvalFamily() {
 	cmd.Internal.Cmds.Store("l-pipe", InternalCmd{
 		Usage: "l-pipe",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			if err := checkArgv(argv, 2); err != nil {
+			f := flag.NewFlagSet("pipe", flag.ContinueOnError)
+			fd := f.Int("p", 1, "")
+			if err := f.Parse(argv); err != nil {
 				return err
 			}
 
 			var pipe bytes.Buffer
 
 			cmd1 := cmd
-			o := bufio.NewWriter(&pipe)
-			cmd1.Stdout = o
-			if err := EvalString(ctx, cmd1, argv[0]); err != nil {
+			w := bufio.NewWriter(&pipe)
+
+			type pair struct {
+				in, out int
+			}
+
+			p := pair{in: *fd}
+
+			switch p.in {
+			case 1:
+				cmd1.Stdout = w
+			case 2:
+				cmd1.Stderr = w
+			}
+
+			if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
 				return err
 			}
-			o.Flush()
+			w.Flush()
 
 			cmd2 := cmd
 			cmd2.Stdin = strings.NewReader(pipe.String())
-			if err := EvalString(ctx, cmd2, argv[1]); err != nil {
+			if err := EvalString(ctx, cmd2, f.Arg(1)); err != nil {
 				return err
 			}
 

@@ -28,6 +28,14 @@ func TestEvalString(t *testing.T) {
 			stderr: "",
 			err:    nil,
 		},
+		{
+			name:   "echo2",
+			expr:   "l-echo --err abc",
+			stdin:  "",
+			stdout: "",
+			stderr: "abc\n",
+			err:    nil,
+		},
 
 		/*
 			basic cat
@@ -215,6 +223,22 @@ func TestEvalString(t *testing.T) {
 		{
 			name:   "pipe2",
 			expr:   `l-pipe {l-pipe {l-echo abc} cat} cat`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "pipe3",
+			expr:   `l-pipe {l-echo --err abc} cat`,
+			stdin:  "",
+			stdout: "",
+			stderr: "abc\n",
+			err:    nil,
+		},
+		{
+			name:   "pipe4",
+			expr:   `l-pipe --p 2 {l-echo --err abc} cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
