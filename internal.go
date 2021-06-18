@@ -134,7 +134,7 @@ func (cmd Command) setUtilFamily() {
 	cmd.Internal.Cmds.Store("l-exit", InternalCmd{
 		Usage: "l-exit",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			return exitErr
+			return shellExitErr
 		},
 	})
 }

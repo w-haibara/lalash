@@ -20,7 +20,7 @@ const (
 	exitCodeErr
 )
 
-var exitErr = errors.New("shell exit")
+var shellExitErr = errors.New("shell exit")
 
 func RunCommand(expr string) int {
 	cmd := cmdNew()
@@ -104,7 +104,7 @@ func RunREPL() int {
 
 			return EvalString(ctx, cmd, expr)
 		}(); err != nil {
-			if err == exitErr {
+			if err == shellExitErr {
 				return exitCodeOK
 			}
 			log.Println(err.Error())
