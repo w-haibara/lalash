@@ -6,7 +6,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -135,8 +134,7 @@ func (cmd Command) setUtilFamily() {
 	cmd.Internal.Cmds.Store("l-exit", InternalCmd{
 		Usage: "l-exit",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			os.Exit(0)
-			return nil
+			return exitErr
 		},
 	})
 }
@@ -327,7 +325,7 @@ func (cmd Command) setEvalFamily() {
 				return err
 			}
 			if err := EvalString(ctx, cmd, argv[0]); err != nil {
-				return fmt.Errorf("eval error [%v] : %v", argv[0], err.Error())
+				return err
 			}
 			return nil
 		},
@@ -346,14 +344,14 @@ func (cmd Command) setEvalFamily() {
 			o := bufio.NewWriter(&pipe)
 			cmd1.Stdout = o
 			if err := EvalString(ctx, cmd1, argv[0]); err != nil {
-				return fmt.Errorf("eval error [%v] : %v", argv[0], err.Error())
+				return err
 			}
 			o.Flush()
 
 			cmd2 := cmd
 			cmd2.Stdin = strings.NewReader(pipe.String())
 			if err := EvalString(ctx, cmd2, argv[1]); err != nil {
-				return fmt.Errorf("eval error [%v] : %v", argv[1], err.Error())
+				return err
 			}
 
 			return nil

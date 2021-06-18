@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"fmt"
 	"os/exec"
 	"strings"
 
@@ -14,14 +13,14 @@ import (
 func EvalString(ctx context.Context, cmd Command, expr string) error {
 	tokens, err := parser.Parse(expr)
 	if err != nil {
-		return fmt.Errorf("[parse error] %v", err.Error())
+		return err
 	}
 
 	start := 0
 	for i := 1; i <= len(tokens); i++ {
 		if tokens[i-1].Kind == parser.SeparateToken {
 			if err := eval(ctx, cmd, tokens[start:i-1]); err != nil {
-				return fmt.Errorf("[eval error] %v", err.Error())
+				return err
 			}
 			start = i
 			if start >= len(tokens) {
@@ -32,7 +31,7 @@ func EvalString(ctx context.Context, cmd Command, expr string) error {
 
 		if i == len(tokens) {
 			if err := eval(ctx, cmd, tokens[start:i]); err != nil {
-				return fmt.Errorf("[eval error] %v", err.Error())
+				return err
 			}
 		}
 	}
@@ -56,7 +55,7 @@ func eval(ctx context.Context, cmd Command, tokens []parser.Token) error {
 
 				tokens, err := parser.Parse(v.Val)
 				if err != nil {
-					return "", fmt.Errorf("[parse error] %v", err.Error())
+					return "", err
 				}
 
 				if tokens == nil || len(tokens) == 0 || tokens[0].Val == "" {
@@ -64,7 +63,7 @@ func eval(ctx context.Context, cmd Command, tokens []parser.Token) error {
 				}
 
 				if err := eval(ctx, cmd, tokens); err != nil {
-					return "", fmt.Errorf("[eval error] %v", err.Error())
+					return "", err
 				}
 
 				w.Flush()
@@ -95,7 +94,7 @@ func Exec(ctx context.Context, cmd Command, argv []string) error {
 
 	if c, err := cmd.Internal.Get(argv[0]); err == nil {
 		if err := c.Fn(ctx, cmd, argv[0], argv[1:]...); err != nil {
-			return fmt.Errorf("[internal exec error] %v", err.Error())
+			return err
 		}
 		return nil
 	}
@@ -107,7 +106,7 @@ func Exec(ctx context.Context, cmd Command, argv []string) error {
 		c.Stderr = cmd.Stderr
 		return c.Run()
 	}(); err != nil {
-		return fmt.Errorf("[exec error] %v", err.Error())
+		return err
 	}
 	return nil
 }

@@ -3,6 +3,7 @@ package lalash
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -15,9 +16,11 @@ import (
 
 const (
 	historyFileName = ".lalash_history"
-	exitCodeOK      = iota
+	exitCodeOK      = iota - 1
 	exitCodeErr
 )
+
+var exitErr = errors.New("shell exit")
 
 func RunCommand(expr string) int {
 	cmd := cmdNew()
@@ -101,6 +104,9 @@ func RunREPL() int {
 
 			return EvalString(ctx, cmd, expr)
 		}(); err != nil {
+			if err == exitErr {
+				return exitCodeOK
+			}
 			log.Println(err.Error())
 		}
 	}
