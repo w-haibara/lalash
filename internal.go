@@ -90,7 +90,7 @@ func sortJoin(s []string) string {
 	return ret
 }
 
-func (cmd Command) setUtilFamily() {
+func (cmd Command) setInternalUtilFamily() {
 	cmd.Internal.Cmds.Store("l-help", InternalCmd{
 		Usage: "l-help",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
@@ -149,7 +149,7 @@ func (cmd Command) setUtilFamily() {
 	})
 }
 
-func (cmd Command) setAliasFamily() {
+func (cmd Command) setInternalAliasFamily() {
 	cmd.Internal.Cmds.Store("l-alias", InternalCmd{
 		Usage: "",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
@@ -198,7 +198,7 @@ func (cmd Command) setAliasFamily() {
 
 }
 
-func (cmd Command) setVarFamily() {
+func (cmd Command) setInternalVarFamily() {
 	cmd.Internal.SetInternalCmd("l-var", InternalCmd{
 		Usage: "l-var",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
@@ -327,7 +327,7 @@ func (cmd Command) setVarFamily() {
 	})
 }
 
-func (cmd Command) setEvalFamily() {
+func (cmd Command) setInternalEvalFamily() {
 	cmd.Internal.Cmds.Store("l-eval", InternalCmd{
 		Usage: "l-eval",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
