@@ -17,7 +17,7 @@ init:
 .PHONY: test
 test:
 	go fmt ./...
-	go test ./...
+	go test -v
 
 .PHONY: docker
 docker:
