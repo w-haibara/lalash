@@ -6,10 +6,11 @@ import (
 )
 
 type Command struct {
-	Stdin    io.Reader
-	Stdout   io.Writer
-	Stderr   io.Writer
-	Internal Internal
+	Stdin      io.Reader
+	Stdout     io.Writer
+	Stderr     io.Writer
+	ExtraFiles []*os.File
+	Internal   Internal
 }
 
 func cmdNew() Command {

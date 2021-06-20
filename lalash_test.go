@@ -30,7 +30,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "echo2",
-			expr:   "l-echo --err abc",
+			expr:   "l-echo --fd=2 abc",
 			stdin:  "",
 			stdout: "",
 			stderr: "abc\n",
@@ -230,7 +230,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "pipe3",
-			expr:   `l-pipe {l-echo --err abc} cat`,
+			expr:   `l-pipe {l-echo --fd=2 abc} cat`,
 			stdin:  "",
 			stdout: "",
 			stderr: "abc\n",
@@ -238,7 +238,15 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "pipe4",
-			expr:   `l-pipe --p 2 {l-echo --err abc} cat`,
+			expr:   `l-pipe -p 2 {l-echo --fd=2 abc} cat`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "pipe5",
+			expr:   `l-pipe -p 3 {l-echo --fd=3 abc} {cat}`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
@@ -252,12 +260,12 @@ func TestEvalString(t *testing.T) {
 			i := strings.NewReader(tt.stdin)
 			cmd.Stdin = i
 
-			var out bytes.Buffer
-			o := bufio.NewWriter(&out)
+			var stdout bytes.Buffer
+			o := bufio.NewWriter(&stdout)
 			cmd.Stdout = o
 
-			var err bytes.Buffer
-			e := bufio.NewWriter(&err)
+			var stderr bytes.Buffer
+			e := bufio.NewWriter(&stderr)
 			cmd.Stderr = e
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -270,12 +278,12 @@ func TestEvalString(t *testing.T) {
 			o.Flush()
 			e.Flush()
 
-			if got := out.String(); got != tt.stdout {
-				t.Errorf("Command: %q\n=== Stdout ===\n%q\n---  want  ---\n%q\n--------------", tt.expr, got, tt.stdout)
+			if got := stdout.String(); got != tt.stdout {
+				t.Errorf("\n=== Stdout ===\n%q\n---  want  ---\n%q\n--------------", got, tt.stdout)
 			}
 
-			if got := err.String(); got != tt.stderr {
-				t.Errorf("Command: %q\n=== Stderr ===\n%q\n---  want  ---\n%q\n--------------", tt.expr, got, tt.stderr)
+			if got := stderr.String(); got != tt.stderr {
+				t.Errorf("\n=== Stderr ===\n%q\n---  want  ---\n%q\n--------------", got, tt.stderr)
 			}
 		})
 	}

@@ -6,6 +6,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
+	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -113,14 +115,20 @@ func (cmd Command) setInternalUtilFamily() {
 		Usage: "l-echo",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
 			f := flag.NewFlagSet("echo", flag.ContinueOnError)
-			isErr := f.Bool("err", false, "")
+			fd := f.Int("fd", 1, "")
 			if err := f.Parse(argv); err != nil {
 				return err
 			}
 
 			out := cmd.Stdout
-			if *isErr {
+			switch {
+			case *fd == 1:
+			case *fd == 2:
 				out = cmd.Stderr
+			case *fd >= 3:
+				out = cmd.ExtraFiles[*fd-3]
+			default:
+				return fmt.Errorf("invalid fd: %v", *fd)
 			}
 			fmt.Fprintln(out, strings.Join(f.Args(), " "))
 			return nil
@@ -350,33 +358,63 @@ func (cmd Command) setInternalEvalFamily() {
 				return err
 			}
 
-			var pipe bytes.Buffer
-
-			cmd1 := cmd
-			w := bufio.NewWriter(&pipe)
-
 			type pair struct {
 				in, out int
 			}
 
 			p := pair{in: *fd}
 
-			switch p.in {
-			case 1:
-				cmd1.Stdout = w
-			case 2:
-				cmd1.Stderr = w
-			}
+			if p.in < 3 {
+				var pipe bytes.Buffer
+				w := bufio.NewWriter(&pipe)
 
-			if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
-				return err
-			}
-			w.Flush()
+				cmd1 := cmd
+				switch {
+				case p.in == 1:
+					cmd1.Stdout = w
+				case p.in == 2:
+					cmd1.Stderr = w
+				default:
+					return fmt.Errorf("invalid fd: %v", p.in)
+				}
 
-			cmd2 := cmd
-			cmd2.Stdin = strings.NewReader(pipe.String())
-			if err := EvalString(ctx, cmd2, f.Arg(1)); err != nil {
-				return err
+				if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
+					return err
+				}
+
+				w.Flush()
+
+				cmd2 := cmd
+				cmd2.Stdin = strings.NewReader(pipe.String())
+				if err := EvalString(ctx, cmd2, f.Arg(1)); err != nil {
+					return err
+				}
+
+			} else {
+				r, w, err := os.Pipe()
+				if err != nil {
+					panic(err)
+				}
+				defer r.Close()
+				defer w.Close()
+
+				out := new(bytes.Buffer)
+				go func() {
+					io.Copy(out, r)
+					r.Close()
+				}()
+
+				cmd1 := cmd
+				cmd1.ExtraFiles = []*os.File{w}
+				if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
+					return err
+				}
+
+				cmd2 := cmd
+				cmd2.Stdin = out
+				if err := EvalString(ctx, cmd2, f.Arg(1)); err != nil {
+					return err
+				}
 			}
 
 			return nil
