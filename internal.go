@@ -405,7 +405,8 @@ func (cmd Command) setInternalEvalFamily() {
 				}()
 
 				cmd1 := cmd
-				cmd1.ExtraFiles = []*os.File{w}
+				cmd1.ExtraFiles = make([]*os.File, p.in-2)
+				cmd1.ExtraFiles[p.in-3] = w
 				if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
 					return err
 				}

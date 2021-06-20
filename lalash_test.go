@@ -252,6 +252,22 @@ func TestEvalString(t *testing.T) {
 			stderr: "",
 			err:    nil,
 		},
+		{
+			name:   "pipe6",
+			expr:   `l-pipe -p 9 {l-echo --fd=9 abc} {cat}`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "pipe7",
+			expr:   `l-pipe -p 100 {l-echo --fd=100 abc} {cat}`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
