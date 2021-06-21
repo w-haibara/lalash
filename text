@@ -1,0 +1,36 @@
+--- FAIL: TestEvalString (0.01s)
+    --- FAIL: TestEvalString/pipe1 (0.00s)
+    --- FAIL: TestEvalString/pipe2 (0.00s)
+    --- FAIL: TestEvalString/pipe4 (0.00s)
+    --- FAIL: TestEvalString/pipe5 (0.00s)
+    --- FAIL: TestEvalString/pipe6 (0.00s)
+    --- FAIL: TestEvalString/pipe7 (0.00s)
+FAIL
+FAIL	github.com/w-haibara/lalash	0.010s
+--- FAIL: TestEvalString (0.01s)
+    --- FAIL: TestEvalString/pipe5 (0.00s)
+FAIL
+FAIL	github.com/w-haibara/lalash	0.011s
+--- FAIL: TestEvalString (0.01s)
+    --- FAIL: TestEvalString/pipe1 (0.00s)
+FAIL
+FAIL	github.com/w-haibara/lalash	0.011s
+--- FAIL: TestEvalString (0.01s)
+    --- FAIL: TestEvalString/pipe4 (0.00s)
+FAIL
+FAIL	github.com/w-haibara/lalash	0.013s
+--- FAIL: TestEvalString (0.01s)
+    --- FAIL: TestEvalString/pipe4 (0.00s)
+    --- FAIL: TestEvalString/pipe5 (0.00s)
+    --- FAIL: TestEvalString/pipe6 (0.00s)
+    --- FAIL: TestEvalString/pipe7 (0.00s)
+FAIL
+FAIL	github.com/w-haibara/lalash	0.010s
+--- FAIL: TestEvalString (0.01s)
+    --- FAIL: TestEvalString/pipe6 (0.00s)
+FAIL
+FAIL	github.com/w-haibara/lalash	0.010s
+--- FAIL: TestEvalString (0.01s)
+    --- FAIL: TestEvalString/pipe6 (0.00s)
+FAIL
+FAIL	github.com/w-haibara/lalash	0.011s

@@ -356,11 +356,7 @@ func (cmd Command) setInternalEvalFamily() {
 			defer r.Close()
 			defer w.Close()
 
-			out := new(bytes.Buffer)
-			go func() {
-				io.Copy(out, r)
-				r.Close()
-			}()
+			w.Chmod(os.ModeNamedPipe)
 
 			cmd1 := cmd
 			switch {
@@ -378,6 +374,11 @@ func (cmd Command) setInternalEvalFamily() {
 			if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
 				return err
 			}
+
+			out := new(bytes.Buffer)
+			w.Close()
+			io.Copy(out, r)
+			r.Close()
 
 			cmd2 := cmd
 			cmd2.Stdin = out
