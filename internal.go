@@ -374,9 +374,9 @@ func (cmd Command) setInternalEvalFamily() {
 			if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
 				return err
 			}
+			w.Close()
 
 			out := new(bytes.Buffer)
-			w.Close()
 			io.Copy(out, r)
 			r.Close()
 
