@@ -1,7 +1,6 @@
 package lalash
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"flag"
@@ -131,20 +130,6 @@ func (cmd Command) setInternalUtilFamily() {
 				return fmt.Errorf("invalid fd: %v", *fd)
 			}
 			fmt.Fprintln(out, strings.Join(f.Args(), " "))
-			return nil
-		},
-	})
-
-	cmd.Internal.Cmds.Store("l-cat", InternalCmd{
-		Usage: "l-cat",
-		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			r := bufio.NewScanner(cmd.Stdin)
-			for r.Scan() {
-				if err := r.Err(); err != nil {
-					fmt.Fprintln(cmd.Stderr, err)
-				}
-				fmt.Fprintln(cmd.Stdout, r.Text())
-			}
 			return nil
 		},
 	})
@@ -364,58 +349,40 @@ func (cmd Command) setInternalEvalFamily() {
 
 			p := pair{in: *fd}
 
-			if p.in < 3 {
-				var pipe bytes.Buffer
-				w := bufio.NewWriter(&pipe)
+			r, w, err := os.Pipe()
+			if err != nil {
+				panic(err)
+			}
+			defer r.Close()
+			defer w.Close()
 
-				cmd1 := cmd
-				switch {
-				case p.in == 1:
-					cmd1.Stdout = w
-				case p.in == 2:
-					cmd1.Stderr = w
-				default:
-					return fmt.Errorf("invalid fd: %v", p.in)
-				}
+			out := new(bytes.Buffer)
+			go func() {
+				io.Copy(out, r)
+				r.Close()
+			}()
 
-				if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
-					return err
-				}
-
-				w.Flush()
-
-				cmd2 := cmd
-				cmd2.Stdin = strings.NewReader(pipe.String())
-				if err := EvalString(ctx, cmd2, f.Arg(1)); err != nil {
-					return err
-				}
-
-			} else {
-				r, w, err := os.Pipe()
-				if err != nil {
-					panic(err)
-				}
-				defer r.Close()
-				defer w.Close()
-
-				out := new(bytes.Buffer)
-				go func() {
-					io.Copy(out, r)
-					r.Close()
-				}()
-
-				cmd1 := cmd
+			cmd1 := cmd
+			switch {
+			case p.in == 1:
+				cmd1.Stdout = w
+			case p.in == 2:
+				cmd1.Stderr = w
+			case p.in >= 3:
 				cmd1.ExtraFiles = make([]*os.File, p.in-2)
 				cmd1.ExtraFiles[p.in-3] = w
-				if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
-					return err
-				}
+			default:
+				return fmt.Errorf("invalid fd: %v", p.in)
+			}
 
-				cmd2 := cmd
-				cmd2.Stdin = out
-				if err := EvalString(ctx, cmd2, f.Arg(1)); err != nil {
-					return err
-				}
+			if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
+				return err
+			}
+
+			cmd2 := cmd
+			cmd2.Stdin = out
+			if err := EvalString(ctx, cmd2, f.Arg(1)); err != nil {
+				return err
 			}
 
 			return nil
