@@ -137,7 +137,23 @@ func (cmd Command) setInternalUtilFamily() {
 	cmd.Internal.Cmds.Store("l-cat", InternalCmd{
 		Usage: "l-cat",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
-			if _, err := io.Copy(cmd.Stdout, cmd.Stdin); err != nil {
+			f := flag.NewFlagSet("cat", flag.ContinueOnError)
+			fd := f.Int("fd", 0, "")
+			if err := f.Parse(argv); err != nil {
+				return err
+			}
+
+			var src io.Reader
+			switch {
+			case *fd == 0:
+				src = cmd.Stdin
+			case *fd >= 3:
+				src = os.NewFile(uintptr(*fd), "src")
+			default:
+				return fmt.Errorf("invalid fd: %v", *fd)
+			}
+
+			if _, err := io.Copy(cmd.Stdout, src); err != nil {
 				return err
 			}
 			return nil
