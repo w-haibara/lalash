@@ -4,18 +4,22 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"fmt"
+	"io"
+	"os"
 	"strings"
 	"testing"
 )
 
 func TestEvalString(t *testing.T) {
 	tests := []struct {
-		name   string
-		expr   string
-		stdin  string
-		stdout string
-		stderr string
-		err    error
+		name    string
+		expr    string
+		stdin   string
+		stdout  string
+		stderr  string
+		inExtra []string
+		err     error
 	}{
 		/*
 			basic echo
@@ -55,6 +59,24 @@ func TestEvalString(t *testing.T) {
 			stdout: "abc",
 			stderr: "",
 			err:    nil,
+		},
+		{
+			name:    "cat3",
+			expr:    "l-cat --fd 3",
+			stdin:   "",
+			stdout:  "abc",
+			stderr:  "",
+			inExtra: []string{"abc"},
+			err:     nil,
+		},
+		{
+			name:    "cat3",
+			expr:    "l-cat --fd 6",
+			stdin:   "",
+			stdout:  "abc",
+			stderr:  "",
+			inExtra: []string{"", "", "", "abc"},
+			err:     nil,
 		},
 
 		/*
@@ -284,6 +306,22 @@ func TestEvalString(t *testing.T) {
 			stderr: "",
 			err:    nil,
 		},
+		{
+			name:   "pipe9",
+			expr:   `l-pipe -p 1:4 {l-echo abc} {l-cat --fd 4}`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "pipe10",
+			expr:   `l-pipe -p 10:11 {l-echo --fd=10 abc} {l-cat --fd 11}`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -299,6 +337,35 @@ func TestEvalString(t *testing.T) {
 			var stderr bytes.Buffer
 			e := bufio.NewWriter(&stderr)
 			cmd.Stderr = e
+
+			if tt.inExtra != nil {
+				cmd.ExtraFiles = make([]*os.File, len(tt.inExtra))
+				for i, v := range tt.inExtra {
+					if v == "" {
+						continue
+					}
+
+					tmp, err := os.CreateTemp("", fmt.Sprint("lalash_test_extra_input_", i))
+					if err != nil {
+						panic(err.Error())
+					}
+					defer tmp.Close()
+					defer os.Remove(tmp.Name())
+
+					_, err = io.WriteString(tmp, v)
+					if err != nil {
+						panic(err.Error())
+					}
+					tmp.Close()
+
+					tmp, err = os.Open(tmp.Name())
+					if err != nil {
+						panic(err.Error())
+					}
+
+					cmd.ExtraFiles[i] = tmp
+				}
+			}
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()

@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -148,7 +149,7 @@ func (cmd Command) setInternalUtilFamily() {
 			case *fd == 0:
 				src = cmd.Stdin
 			case *fd >= 3:
-				src = os.NewFile(uintptr(*fd), "src")
+				src = cmd.ExtraFiles[*fd-3]
 			default:
 				return fmt.Errorf("invalid fd: %v", *fd)
 			}
@@ -364,54 +365,107 @@ func (cmd Command) setInternalEvalFamily() {
 		Usage: "l-pipe",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
 			f := flag.NewFlagSet("pipe", flag.ContinueOnError)
-			fd := f.Int("p", 1, "")
+			p := f.String("p", "1:0", "")
 			if err := f.Parse(argv); err != nil {
 				return err
 			}
 
 			type pair struct {
-				in, out int
+				in, out int64
 			}
 
-			p := pair{in: *fd}
+			v, err := func(expr string) ([]pair, error) {
+				res := []pair{}
 
-			r, w, err := os.Pipe()
+				for _, v1 := range strings.Split(expr, ",") {
+					if v1 == "" {
+						continue
+					}
+
+					n := strings.SplitN(v1, ":", 2)
+
+					for i, v := range n {
+						n[i] = strings.TrimSpace(v)
+					}
+
+					tmp := pair{}
+
+					if in, err := strconv.ParseInt(n[0], 10, 32); err == nil {
+						tmp.in = in
+					} else {
+						return nil, err
+					}
+
+					if len(n) >= 2 {
+						if out, err := strconv.ParseInt(n[1], 10, 32); err == nil {
+							tmp.out = out
+						} else {
+							return nil, err
+						}
+					}
+
+					res = append(res, tmp)
+				}
+
+				return res, nil
+			}(*p)
 			if err != nil {
-				panic(err)
-			}
-			defer r.Close()
-			defer w.Close()
-
-			w.Chmod(os.ModeNamedPipe)
-
-			cmd1 := cmd
-			switch {
-			case p.in == 1:
-				cmd1.Stdout = w
-			case p.in == 2:
-				cmd1.Stderr = w
-			case p.in >= 3:
-				cmd1.ExtraFiles = make([]*os.File, p.in-2)
-				cmd1.ExtraFiles[p.in-3] = w
-			default:
-				return fmt.Errorf("invalid fd: %v", p.in)
-			}
-
-			if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
-				return err
-			}
-			w.Close()
-
-			out := new(bytes.Buffer)
-			io.Copy(out, r)
-			r.Close()
-
-			cmd2 := cmd
-			cmd2.Stdin = out
-			if err := EvalString(ctx, cmd2, f.Arg(1)); err != nil {
 				return err
 			}
 
+			for _, v := range v {
+				if err := func() error {
+					r, w, err := os.Pipe()
+					if err != nil {
+						panic(err)
+					}
+					defer r.Close()
+					defer w.Close()
+
+					w.Chmod(os.ModeNamedPipe)
+
+					cmd1 := cmd
+					switch {
+					case v.in == 1:
+						cmd1.Stdout = w
+					case v.in == 2:
+						cmd1.Stderr = w
+					case v.in >= 3:
+						cmd1.ExtraFiles = make([]*os.File, v.in-2)
+						cmd1.ExtraFiles[v.in-3] = w
+					default:
+						return fmt.Errorf("invalid input fd: %v", v.in)
+					}
+
+					if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
+						return err
+					}
+					w.Close()
+
+					cmd2 := cmd
+					if v.out < 3 {
+						if v.out != 0 {
+							return fmt.Errorf("invalid output fd: %v", v.out)
+						}
+
+						out := new(bytes.Buffer)
+						io.Copy(out, r)
+						r.Close()
+						cmd2.Stdin = out
+					} else {
+						cmd2.ExtraFiles = make([]*os.File, v.out-2)
+						cmd2.ExtraFiles[v.out-3] = r
+					}
+
+					if err := EvalString(ctx, cmd2, f.Arg(1)); err != nil {
+						return err
+					}
+
+					return nil
+				}(); err != nil {
+					return err
+				}
+			}
 			return nil
 		},
 	})
