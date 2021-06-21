@@ -38,6 +38,18 @@ func TestEvalString(t *testing.T) {
 		},
 
 		/*
+			basic cat
+		*/
+		{
+			name:   "cat1",
+			expr:   "l-cat",
+			stdin:  "abc",
+			stdout: "abc",
+			stderr: "",
+			err:    nil,
+		},
+
+		/*
 			string literal
 		*/
 		{
@@ -202,7 +214,7 @@ func TestEvalString(t *testing.T) {
 		*/
 		{
 			name:   "pipe1",
-			expr:   `l-pipe {l-echo abc} cat`,
+			expr:   `l-pipe {l-echo abc} l-cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
@@ -210,7 +222,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "pipe2",
-			expr:   `l-pipe {l-pipe {l-echo abc} cat} cat`,
+			expr:   `l-pipe {l-pipe {l-echo abc} l-cat} l-cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
@@ -218,7 +230,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "pipe3",
-			expr:   `l-pipe {l-echo --fd=2 abc} cat`,
+			expr:   `l-pipe {l-echo --fd=2 abc} l-cat`,
 			stdin:  "",
 			stdout: "",
 			stderr: "abc\n",
@@ -226,7 +238,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "pipe4",
-			expr:   `l-pipe -p 2 {l-echo --fd=2 abc} cat`,
+			expr:   `l-pipe -p 2 {l-echo --fd=2 abc} l-cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
@@ -234,7 +246,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "pipe5",
-			expr:   `l-pipe -p 3 {l-echo --fd=3 abc} cat`,
+			expr:   `l-pipe -p 3 {l-echo --fd=3 abc} l-cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
@@ -242,7 +254,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "pipe6",
-			expr:   `l-pipe -p 9 {l-echo --fd=9 abc} cat`,
+			expr:   `l-pipe -p 9 {l-echo --fd=9 abc} l-cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
@@ -250,7 +262,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "pipe7",
-			expr:   `l-pipe -p 100 {l-echo --fd=100 abc} cat`,
+			expr:   `l-pipe -p 100 {l-echo --fd=100 abc} l-cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",

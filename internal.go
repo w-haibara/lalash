@@ -134,6 +134,16 @@ func (cmd Command) setInternalUtilFamily() {
 		},
 	})
 
+	cmd.Internal.Cmds.Store("l-cat", InternalCmd{
+		Usage: "l-cat",
+		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
+			if _, err := io.Copy(cmd.Stdout, cmd.Stdin); err != nil {
+				return err
+			}
+			return nil
+		},
+	})
+
 	cmd.Internal.Cmds.Store("l-exit", InternalCmd{
 		Usage: "l-exit",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
