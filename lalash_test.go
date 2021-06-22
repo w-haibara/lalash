@@ -205,7 +205,7 @@ func TestEvalString(t *testing.T) {
 		*/
 		{
 			name:   "var1",
-			expr:   `l-var aaa xxx; echo (l-var --ref aaa)`,
+			expr:   `l-var aaa xxx; l-echo (l-var --ref aaa)`,
 			stdin:  "",
 			stdout: "xxx\n",
 			stderr: "",
@@ -213,7 +213,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "var2",
-			expr:   `l-var --mut aaa xxx; l-var --ch aaa yyy; echo (l-var --ref aaa)`,
+			expr:   `l-var --mut aaa xxx; l-var --ch aaa yyy; l-echo (l-var --ref aaa)`,
 			stdin:  "",
 			stdout: "yyy\n",
 			stderr: "",
@@ -221,7 +221,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "var3",
-			expr:   `l-var aaa zzz; l-var --del aaa; l-var --mut aaa xxx; l-var --ch aaa yyy; echo (l-var --ref aaa)`,
+			expr:   `l-var aaa zzz; l-var --del aaa; l-var --mut aaa xxx; l-var --ch aaa yyy; l-echo (l-var --ref aaa)`,
 			stdin:  "",
 			stdout: "yyy\n",
 			stderr: "",
@@ -333,7 +333,7 @@ func TestEvalString(t *testing.T) {
 		},
 		{
 			name:   "pipe11",
-			expr:   `l-pipe --in ./testfiles/in/txt cat`,
+			expr:   `l-pipe --in ./testfiles/in/txt l-cat`,
 			stdin:  "",
 			stdout: "abc\n",
 			stderr: "",
