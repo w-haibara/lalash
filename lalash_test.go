@@ -13,13 +13,14 @@ import (
 
 func TestEvalString(t *testing.T) {
 	tests := []struct {
-		name    string
-		expr    string
-		stdin   string
-		stdout  string
-		stderr  string
-		inExtra []string
-		err     error
+		name      string
+		expr      string
+		stdin     string
+		stdout    string
+		stderr    string
+		inExtra   []string
+		err       error
+		checkFile func() error
 	}{
 		/*
 			basic echo
@@ -322,6 +323,40 @@ func TestEvalString(t *testing.T) {
 			stderr: "",
 			err:    nil,
 		},
+		{
+			name:   "pipe11",
+			expr:   `l-pipe --in ./testfiles/in/txt cat`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "pipe12",
+			expr:   `l-pipe --out ./testfiles/out/txt {l-echo abc}`,
+			stdin:  "",
+			stdout: "",
+			stderr: "",
+			err:    nil,
+			checkFile: func() error {
+				txt := "abc\n"
+				name := "./testfiles/out/txt"
+
+				data, err := os.ReadFile(name)
+				if err != nil {
+					return err
+				}
+				if string(data) != txt {
+					return fmt.Errorf("%q\n---  want  ---\n%q\n--------------", string(data), txt)
+				}
+
+				if err := os.Remove(name); err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -383,6 +418,12 @@ func TestEvalString(t *testing.T) {
 
 			if got := stderr.String(); got != tt.stderr {
 				t.Errorf("\n=== Stderr ===\n%q\n---  want  ---\n%q\n--------------", got, tt.stderr)
+			}
+
+			if tt.checkFile != nil {
+				if err := tt.checkFile(); err != nil {
+					t.Errorf("\n===  File  ===\n%s", err.Error())
+				}
 			}
 		})
 	}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -365,9 +366,63 @@ func (cmd Command) setInternalEvalFamily() {
 		Usage: "l-pipe",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
 			f := flag.NewFlagSet("pipe", flag.ContinueOnError)
-			p := f.String("p", "1:0", "")
+			p := f.String("p", "", "")
+			in := f.String("in", "", "")
+			out := f.String("out", "", "")
 			if err := f.Parse(argv); err != nil {
 				return err
+			}
+
+			if *in != "" && *out != "" {
+				return fmt.Errorf("can not set both --in and --out")
+			}
+
+			if (*in != "" || *out != "") && *p != "" {
+				return fmt.Errorf("can not set both -p and --in / --out")
+			}
+
+			if *in != "" {
+				cmd1 := cmd
+				i, err := filepath.Abs(*in)
+				if err != nil {
+					return err
+				}
+				file, err := os.Open(i)
+				if err != nil {
+					return err
+				}
+				cmd1.Stdin = file
+				if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
+					return err
+				}
+				if err := file.Close(); err != nil {
+					return err
+				}
+				return nil
+			}
+
+			if *out != "" {
+				cmd1 := cmd
+				o, err := filepath.Abs(*out)
+				if err != nil {
+					return err
+				}
+				file, err := os.OpenFile(o, os.O_WRONLY|os.O_CREATE, 0666)
+				if err != nil {
+					return err
+				}
+				cmd1.Stdout = file
+				if err := EvalString(ctx, cmd1, f.Arg(0)); err != nil {
+					return err
+				}
+				if err := file.Close(); err != nil {
+					return err
+				}
+				return nil
+			}
+
+			if *p == "" {
+				*p = "1:0"
 			}
 
 			type pair struct {
