@@ -12,6 +12,14 @@ import (
 )
 
 func TestEvalString(t *testing.T) {
+	outputFiles := "./testfiles/out"
+	if err := os.RemoveAll(outputFiles); err != nil {
+		panic(err.Error())
+	}
+	if err := os.Mkdir(outputFiles, os.ModePerm); err != nil {
+		panic(err.Error())
+	}
+
 	tests := []struct {
 		name      string
 		expr      string
