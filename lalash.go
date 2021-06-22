@@ -85,7 +85,7 @@ func RunREPL() int {
 		return
 	})
 
-	line.SetCtrlCAborts(true)
+	line.SetCtrlCAborts(false)
 
 	history := history.New(historyFileName)
 	history.ReadHistory(line)

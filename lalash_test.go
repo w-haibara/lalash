@@ -201,6 +201,18 @@ func TestEvalString(t *testing.T) {
 		},
 
 		/*
+			exec
+		*/
+		{
+			name:   "exec1",
+			expr:   `echo abc`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+
+		/*
 			var
 		*/
 		{

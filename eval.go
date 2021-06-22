@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
 
 	"github.com/w-haibara/lalash/parser"
@@ -98,13 +100,27 @@ func Exec(ctx context.Context, cmd Command, argv []string) error {
 		}
 		return nil
 	}
-
 	if err := func() error {
 		c := exec.CommandContext(ctx, argv[0], argv[1:]...)
 		c.Stdin = cmd.Stdin
 		c.Stdout = cmd.Stdout
 		c.Stderr = cmd.Stderr
-		return c.Run()
+
+		sigc := make(chan os.Signal, 1024)
+		defer signal.Stop(sigc)
+
+		signal.Notify(sigc)
+		go func() {
+			for {
+				c.Process.Signal(<-sigc)
+			}
+		}()
+
+		if err := c.Run(); err != nil {
+			return err
+		}
+
+		return nil
 	}(); err != nil {
 		return err
 	}
