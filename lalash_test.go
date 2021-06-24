@@ -223,6 +223,14 @@ func TestEvalString(t *testing.T) {
 			stderr: "",
 			err:    nil,
 		},
+		{
+			name:   "substitution7",
+			expr:   `l-eval {l-echo "(l-echo abc)"}`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
 
 		/*
 			exec
