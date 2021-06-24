@@ -120,11 +120,6 @@ func Parse(expr string) ([]Token, error) {
 		return nil, err
 	}
 
-	ret, err = ParenParser(ret, "(", ")", SubstitutionToken)
-	if err != nil {
-		return nil, err
-	}
-
 	for i, v := range ret {
 		if v.Kind == RawStringToken {
 			continue
@@ -136,6 +131,11 @@ func Parse(expr string) ([]Token, error) {
 		}
 	}
 
+	ret, err = ParenParser(ret, "(", ")", SubstitutionToken)
+	if err != nil {
+		return nil, err
+	}
+
 	return ret, nil
 }
 
@@ -144,7 +144,7 @@ func ParenParser(tok []Token, start, end, kind string) ([]Token, error) {
 	count := 0
 	tmp := ""
 	for i := 0; i < len(tok); i++ {
-		if tok[i].Kind == StringToken || tok[i].Kind == RawStringToken {
+		if tok[i].Kind == RawStringToken {
 			res = append(res, tok[i])
 			continue
 		}

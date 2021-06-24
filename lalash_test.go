@@ -199,6 +199,30 @@ func TestEvalString(t *testing.T) {
 			stderr: "",
 			err:    nil,
 		},
+		{
+			name:   "substitution4",
+			expr:   `l-echo {(l-echo abc)}`,
+			stdin:  "",
+			stdout: "(l-echo abc)\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "substitution5",
+			expr:   `l-echo "(l-echo abc)"`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "substitution6",
+			expr:   `l-echo {"(l-echo abc)"}`,
+			stdin:  "",
+			stdout: "\"(l-echo abc)\"\n",
+			stderr: "",
+			err:    nil,
+		},
 
 		/*
 			exec
