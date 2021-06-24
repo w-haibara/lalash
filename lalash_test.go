@@ -233,13 +233,29 @@ func TestEvalString(t *testing.T) {
 		},
 
 		/*
-			exec
+			eval
 		*/
 		{
-			name:   "exec1",
-			expr:   `echo abc`,
+			name:   "eval1",
+			expr:   `l-eval "echo abc"`,
 			stdin:  "",
 			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "eval2",
+			expr:   `l-eval {echo abc}`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "eval3",
+			expr:   `l-eval ""`,
+			stdin:  "",
+			stdout: "",
 			stderr: "",
 			err:    nil,
 		},
