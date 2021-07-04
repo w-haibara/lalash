@@ -163,12 +163,14 @@ func (cmd Command) setInternalUtilFamily() {
 	})
 
 	cmd.Internal.Cmds.Store("l-cd", InternalCmd{
-		Usage: "l-cat",
+		Usage: "l-cd <path>",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
 			if err := checkArgv(argv, 1); err != nil {
 				return err
 			}
-			os.Chdir(argv[0])
+			if err := os.Chdir(argv[0]); err != nil {
+				return err
+			}
 			return nil
 		},
 	})
