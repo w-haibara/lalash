@@ -24,5 +24,6 @@ func cmdNew() Command {
 	cmd.setInternalAliasFamily()
 	cmd.setInternalVarFamily()
 	cmd.setInternalEvalFamily()
+	cmd.setInternalStringFamily()
 	return cmd
 }
