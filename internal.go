@@ -20,18 +20,22 @@ type InternalCmd struct {
 }
 
 type Internal struct {
-	Cmds   *sync.Map
-	Alias  *sync.Map
-	MutVar *sync.Map
-	Var    *sync.Map
+	Cmds         *sync.Map
+	Alias        *sync.Map
+	MutVar       *sync.Map
+	Var          *sync.Map
+	GlobalMutVar *sync.Map
+	GlobalVar    *sync.Map
 }
 
 func NewInternal() Internal {
 	in := Internal{
-		Cmds:   new(sync.Map),
-		Alias:  new(sync.Map),
-		MutVar: new(sync.Map),
-		Var:    new(sync.Map),
+		Cmds:         new(sync.Map),
+		Alias:        new(sync.Map),
+		MutVar:       new(sync.Map),
+		Var:          new(sync.Map),
+		GlobalMutVar: new(sync.Map),
+		GlobalVar:    new(sync.Map),
 	}
 	return in
 }
@@ -259,7 +263,41 @@ func (cmd Command) setInternalAliasFamily() {
 
 }
 
+func storeVarToMap(m *sync.Map, name, value string) {
+	m.Store(name, value)
+}
+
+func loadVarFromMap(m *sync.Map, name string) (string, bool) {
+	if v, ok := m.Load(name); ok {
+		if v, ok := v.(string); ok {
+			return v, true
+		}
+	}
+	return "", false
+}
+
 func (cmd Command) setInternalVarFamily() {
+
+	loadVar := func(name string) (string, bool) {
+		if v, ok := loadVarFromMap(cmd.Internal.Var, name); ok {
+			return v, true
+		}
+
+		if v, ok := loadVarFromMap(cmd.Internal.MutVar, name); ok {
+			return v, true
+		}
+
+		if v, ok := loadVarFromMap(cmd.Internal.GlobalVar, name); ok {
+			return v, true
+		}
+
+		if v, ok := loadVarFromMap(cmd.Internal.GlobalMutVar, name); ok {
+			return v, true
+		}
+
+		return "", false
+	}
+
 	cmd.Internal.SetInternalCmd("l-var", InternalCmd{
 		Usage: "l-var",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
@@ -269,8 +307,20 @@ func (cmd Command) setInternalVarFamily() {
 			isCh := f.Bool("ch", false, "")
 			isDel := f.Bool("del", false, "")
 			isShow := f.Bool("show", false, "")
+			isGlobal := f.Bool("global", false, "")
+			isCheck := f.Bool("check", false, "")
+
 			if err := f.Parse(argv); err != nil {
 				return err
+			}
+
+			if *isCheck {
+				if err := checkArgv(f.Args(), 1); err != nil {
+					return err
+				}
+				_, ok := loadVar(f.Arg(0))
+				fmt.Fprintln(cmd.Stdout, ok)
+				return nil
 			}
 
 			if *isMut && (*isRef || *isCh || *isDel || *isShow) {
@@ -284,8 +334,19 @@ func (cmd Command) setInternalVarFamily() {
 			if *isCh && (*isDel || *isShow) {
 				return fmt.Errorf("cannot set --ch and others")
 			}
+
 			if *isDel && *isShow {
 				return fmt.Errorf("cannot set both --del and --show")
+			}
+
+			var varMap = cmd.Internal.Var
+			if *isGlobal {
+				varMap = cmd.Internal.GlobalVar
+			}
+
+			var mutVarMap = cmd.Internal.MutVar
+			if *isGlobal {
+				mutVarMap = cmd.Internal.GlobalMutVar
 			}
 
 			switch {
@@ -297,32 +358,28 @@ func (cmd Command) setInternalVarFamily() {
 					return fmt.Errorf("value is blank")
 				}
 
-				_, ok := cmd.Internal.Var.Load(f.Arg(0))
-				if !ok {
-					_, ok = cmd.Internal.MutVar.Load(f.Arg(0))
-				}
-				if ok {
+				if _, ok := loadVar(f.Arg(0)); ok {
 					return fmt.Errorf("variable is already exists: %v", f.Arg(0))
 				}
-				cmd.Internal.Var.Store(f.Arg(0), f.Arg(1))
+
+				storeVarToMap(varMap, f.Arg(0), f.Arg(1))
 				return nil
 
 			case *isMut && !*isRef && !*isCh && !*isDel && !*isShow:
 				if f.Arg(0) == "" {
 					return fmt.Errorf("key is blank")
 				}
+
 				if f.Arg(1) == "" {
 					return fmt.Errorf("value is blank")
 				}
 
-				_, ok := cmd.Internal.Var.Load(f.Arg(0))
-				if !ok {
-					_, ok = cmd.Internal.MutVar.Load(f.Arg(0))
-				}
-				if ok {
+				if _, ok := loadVar(f.Arg(0)); ok {
 					return fmt.Errorf("variable is already exists: %v", f.Arg(0))
 				}
-				cmd.Internal.MutVar.Store(f.Arg(0), f.Arg(1))
+
+				storeVarToMap(mutVarMap, f.Arg(0), f.Arg(1))
+
 				return nil
 
 			case !*isMut && *isRef && !*isCh && !*isDel && !*isShow:
@@ -330,10 +387,7 @@ func (cmd Command) setInternalVarFamily() {
 					return fmt.Errorf("key is blank")
 				}
 
-				v, ok := cmd.Internal.Var.Load(f.Arg(0))
-				if !ok {
-					v, ok = cmd.Internal.MutVar.Load(f.Arg(0))
-				}
+				v, ok := loadVar(f.Arg(0))
 				if !ok {
 					return fmt.Errorf("variable is not defined: %v", f.Arg(0))
 				}
@@ -345,13 +399,20 @@ func (cmd Command) setInternalVarFamily() {
 					return fmt.Errorf("key is blank")
 				}
 
-				if _, ok := cmd.Internal.Var.Load(f.Arg(0)); ok {
-					return fmt.Errorf("variable is immutable: %v", f.Arg(0))
-				}
-				if _, ok := cmd.Internal.MutVar.Load(f.Arg(0)); !ok {
+				if _, ok := loadVar(f.Arg(0)); !ok {
 					return fmt.Errorf("variable is not defined: %v", f.Arg(0))
 				}
-				cmd.Internal.MutVar.Store(f.Arg(0), f.Arg(1))
+
+				if _, ok := loadVarFromMap(cmd.Internal.Var, f.Arg(0)); ok {
+					return fmt.Errorf("variable is immutable: %v", f.Arg(0))
+				}
+
+				if _, ok := loadVarFromMap(cmd.Internal.Var, f.Arg(0)); ok {
+					return fmt.Errorf("variable is immutable: %v", f.Arg(0))
+				}
+
+				storeVarToMap(varMap, f.Arg(0), f.Arg(1))
+
 				return nil
 
 			case !*isMut && !*isRef && !*isCh && *isDel && !*isShow:
@@ -359,26 +420,35 @@ func (cmd Command) setInternalVarFamily() {
 					return fmt.Errorf("key is blank")
 				}
 
-				cmd.Internal.Var.Delete(f.Arg(0))
+				varMap.Delete(f.Arg(0))
 				cmd.Internal.MutVar.Delete(f.Arg(0))
 				return nil
 
 			case !*isMut && !*isRef && !*isCh && !*isDel && *isShow:
-				fmt.Fprintln(cmd.Stdout, "[mutable variables]")
-				s1 := []string{}
-				cmd.Internal.MutVar.Range(func(key, value interface{}) bool {
-					fmt.Fprintln(cmd.Stdout, key, ":", value)
-					return true
-				})
-				fmt.Fprint(cmd.Stdout, sortJoin(s1))
+				sprint := func(m *sync.Map, title string) string {
+					res := title
+					s := []string{}
+					m.Range(func(key, value interface{}) bool {
+						k, ok := key.(string)
+						if !ok {
+							return false
+						}
 
-				fmt.Fprintln(cmd.Stdout, "\n[immutable variables]")
-				s2 := []string{}
-				cmd.Internal.Var.Range(func(key, value interface{}) bool {
-					fmt.Fprintln(cmd.Stdout, key, ":", value)
-					return true
-				})
-				fmt.Fprint(cmd.Stdout, sortJoin(s2))
+						v, ok := value.(string)
+						if !ok {
+							return false
+						}
+
+						s = append(s, k+" : "+v)
+						return true
+					})
+					return res + "\n" + sortJoin(s)
+				}
+
+				fmt.Fprintln(cmd.Stdout, sprint(cmd.Internal.Var, "[variables]"))
+				fmt.Fprintln(cmd.Stdout, sprint(cmd.Internal.MutVar, "[mutable variables]"))
+				fmt.Fprintln(cmd.Stdout, sprint(cmd.Internal.GlobalVar, "[global variables]"))
+				fmt.Fprintln(cmd.Stdout, sprint(cmd.Internal.GlobalMutVar, "[global mutable variables]"))
 
 				return nil
 			}
@@ -395,7 +465,12 @@ func (cmd Command) setInternalEvalFamily() {
 			if err := checkArgv(argv, 1); err != nil {
 				return err
 			}
-			if err := EvalString(ctx, cmd, argv[0]); err != nil {
+
+			c := cmd
+			c.Internal.Var = new(sync.Map)
+			c.Internal.MutVar = new(sync.Map)
+
+			if err := EvalString(ctx, c, argv[0]); err != nil {
 				return err
 			}
 			return nil
