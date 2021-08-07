@@ -113,9 +113,7 @@ func Parse(expr string) ([]Token, error) {
 		}
 	}
 
-	var err error
-
-	ret, err = ParenParser(ret, "{", "}", RawStringToken)
+	ret, err := ParenParser(ret, "{", "}", RawStringToken)
 	if err != nil {
 		return nil, err
 	}
