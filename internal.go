@@ -277,30 +277,30 @@ func loadVarFromMap(m *sync.Map, name string) (string, bool) {
 }
 
 func (cmd Command) setInternalVarFamily() {
-
-	loadVar := func(name string) (string, bool) {
-		if v, ok := loadVarFromMap(cmd.Internal.Var, name); ok {
-			return v, true
-		}
-
-		if v, ok := loadVarFromMap(cmd.Internal.MutVar, name); ok {
-			return v, true
-		}
-
-		if v, ok := loadVarFromMap(cmd.Internal.GlobalVar, name); ok {
-			return v, true
-		}
-
-		if v, ok := loadVarFromMap(cmd.Internal.GlobalMutVar, name); ok {
-			return v, true
-		}
-
-		return "", false
-	}
-
 	cmd.Internal.SetInternalCmd("l-var", InternalCmd{
 		Usage: "l-var",
 		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
+
+			loadVar := func(name string) (string, bool) {
+				if v, ok := loadVarFromMap(cmd.Internal.Var, name); ok {
+					return v, true
+				}
+
+				if v, ok := loadVarFromMap(cmd.Internal.MutVar, name); ok {
+					return v, true
+				}
+
+				if v, ok := loadVarFromMap(cmd.Internal.GlobalVar, name); ok {
+					return v, true
+				}
+
+				if v, ok := loadVarFromMap(cmd.Internal.GlobalMutVar, name); ok {
+					return v, true
+				}
+
+				return "", false
+			}
+
 			f := flag.NewFlagSet("var", flag.ContinueOnError)
 			isMut := f.Bool("mut", false, "")
 			isRef := f.Bool("ref", false, "")
