@@ -181,6 +181,33 @@ func (cmd Command) setInternalUtilFamily() {
 			return shellExitErr
 		},
 	})
+
+	cmd.Internal.Cmds.Store("l-fn", InternalCmd{
+		Usage: "l-fn",
+		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
+			f := flag.NewFlagSet("fn", flag.ContinueOnError)
+			if err := f.Parse(argv); err != nil {
+				return err
+			}
+
+			if err := checkArgv(f.Args(), 2); err != nil {
+				return err
+			}
+
+			if f.Arg(0) == "" {
+				return fmt.Errorf("function name is blank")
+			}
+
+			if f.Arg(1) == "" {
+				return fmt.Errorf("function body is blank")
+			}
+
+			cmd.Internal.Alias.Store(f.Arg(0), "l-eval {"+f.Arg(1)+"}")
+
+			return nil
+		},
+	})
+
 }
 
 func (cmd Command) setInternalAliasFamily() {

@@ -425,6 +425,26 @@ func TestEvalString(t *testing.T) {
 				return nil
 			},
 		},
+
+		/*
+			fn
+		*/
+		{
+			name:   "fn1",
+			expr:   `l-fn aaa {l-echo abc}; aaa`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "fn1",
+			expr:   `l-fn aaa {l-fn bbb {l-echo abc}}; aaa; bbb`,
+			stdin:  "",
+			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
