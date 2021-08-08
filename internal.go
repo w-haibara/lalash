@@ -26,6 +26,8 @@ type Internal struct {
 	Var          *sync.Map
 	GlobalMutVar *sync.Map
 	GlobalVar    *sync.Map
+	Args         *sync.Map
+	Return       *sync.Map
 }
 
 func NewInternal() Internal {
@@ -36,6 +38,8 @@ func NewInternal() Internal {
 		Var:          new(sync.Map),
 		GlobalMutVar: new(sync.Map),
 		GlobalVar:    new(sync.Map),
+		Args:         new(sync.Map),
+		Return:       new(sync.Map),
 	}
 	return in
 }
@@ -86,6 +90,15 @@ func (i Internal) Get(key string) (InternalCmd, error) {
 		return InternalCmd{}, fmt.Errorf("function of the command is invalid")
 	}
 	return InternalCmd(cmd), nil
+}
+
+func (i Internal) arg(n int) string {
+	if v, ok := i.Args.Load(n); ok {
+		if v, ok := v.(string); ok {
+			return v
+		}
+	}
+	return ""
 }
 
 func sortJoin(s []string) string {
@@ -212,6 +225,23 @@ func (cmd Command) setInternalUtilFamily() {
 		},
 	})
 
+	cmd.Internal.Cmds.Store("l-arg", InternalCmd{
+		Usage: "l-arg",
+		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
+			if err := checkArgv(argv, 1); err != nil {
+				return err
+			}
+
+			n, err := strconv.Atoi(argv[0])
+			if err != nil {
+				return err
+			}
+
+			fmt.Fprintln(cmd.Stdout, cmd.Internal.arg(n))
+
+			return nil
+		},
+	})
 }
 
 func (cmd Command) setInternalAliasFamily() {
@@ -469,18 +499,33 @@ func (cmd Command) setInternalEvalFamily() {
 			c := cmd
 			c.Internal.Var = new(sync.Map)
 			c.Internal.MutVar = new(sync.Map)
+			c.Internal.Args = new(sync.Map)
+			c.Internal.Return = new(sync.Map)
 
-			arg := ""
-			for _, v := range argv {
-				arg += v + " "
-			}
-			if strings.TrimSpace(arg) == "" {
-				return nil
+			for i, v := range argv[1:] {
+				c.Internal.Args.Store(i, v)
 			}
 
-			if err := EvalString(ctx, c, arg); err != nil {
+			if err := EvalString(ctx, c, argv[0]); err != nil {
 				return err
 			}
+
+			c.Internal.Return.Range(func(key, value interface{}) bool {
+				k, ok := key.(string)
+				if !ok {
+					return false
+				}
+
+				v, ok := value.(string)
+				if !ok {
+					return false
+				}
+
+				cmd.Internal.Return.Store(k, v)
+
+				return true
+			})
+
 			return nil
 		},
 	})

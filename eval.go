@@ -91,7 +91,18 @@ func eval(ctx context.Context, cmd Command, tokens []parser.Token) error {
 
 func Exec(ctx context.Context, cmd Command, argv []string) error {
 	if alias := cmd.Internal.GetAlias(argv[0]); alias != argv[0] {
-		return EvalString(ctx, cmd, alias)
+		str := ""
+		for i, v := range argv {
+			if i == 0 {
+				str += alias + " "
+				continue
+			}
+			str += v + " "
+		}
+
+		EvalString(ctx, cmd, str)
+
+		return nil
 	}
 
 	if c, err := cmd.Internal.Get(argv[0]); err == nil {

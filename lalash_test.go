@@ -263,7 +263,7 @@ func TestEvalString(t *testing.T) {
 			name:   "eval4",
 			expr:   `l-eval {echo} abc`,
 			stdin:  "",
-			stdout: "abc\n",
+			stdout: "\n",
 			stderr: "",
 			err:    nil,
 		}, {
@@ -515,11 +515,28 @@ func TestEvalString(t *testing.T) {
 			stdout: "abc\n",
 			stderr: "",
 			err:    nil,
-		}, {
+		},
+		{
 			name:   "fn4",
 			expr:   `l-fn aaa {l-var xxx abc}; aaa; l-var --check xxx`,
 			stdin:  "",
 			stdout: "false\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "fn5",
+			expr:   `l-fn aaa {echo (l-arg 0)}; aaa hello`,
+			stdin:  "",
+			stdout: "hello\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "fn6",
+			expr:   `l-fn aaa {echo (l-arg 0); echo (l-arg 1)}; aaa hello world`,
+			stdin:  "",
+			stdout: "hello\nworld\n",
 			stderr: "",
 			err:    nil,
 		},
