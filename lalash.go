@@ -20,7 +20,10 @@ const (
 	exitCodeErr
 )
 
-var shellExitErr = errors.New("shell exit")
+var (
+	shellExitErr  = errors.New("shell exit")
+	funcReturnErr = errors.New("function return")
+)
 
 func RunCommand(expr string) int {
 	cmd := cmdNew()
@@ -104,8 +107,12 @@ func RunREPL() int {
 
 			return EvalString(ctx, cmd, expr)
 		}(); err != nil {
-			if err == shellExitErr {
+			switch err {
+			case shellExitErr:
 				return exitCodeOK
+			case funcReturnErr:
+				log.Println("[func return error] here is the main routine")
+				continue
 			}
 			log.Println(err.Error())
 		}

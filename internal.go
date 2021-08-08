@@ -259,6 +259,34 @@ func (cmd Command) setInternalUtilFamily() {
 			return nil
 		},
 	})
+
+	cmd.Internal.Cmds.Store("l-return", InternalCmd{
+		Usage: "l-return",
+		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
+			for i, v := range argv {
+				cmd.Internal.Return.Store(i, v)
+			}
+
+			return funcReturnErr
+		},
+	})
+
+	cmd.Internal.Cmds.Store("l-return-val", InternalCmd{
+		Usage: "l-return-val",
+		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
+			for i := 0; ; i++ {
+				if v, ok := cmd.Internal.Return.Load(i); ok {
+					if v, ok := v.(string); ok {
+						fmt.Fprintln(cmd.Stdout, v)
+					}
+				} else {
+					break
+				}
+			}
+
+			return nil
+		},
+	})
 }
 
 func (cmd Command) setInternalAliasFamily() {
@@ -523,12 +551,15 @@ func (cmd Command) setInternalEvalFamily() {
 				c.Internal.Args.Store(i, v)
 			}
 
-			if err := EvalString(ctx, c, argv[0]); err != nil {
+			switch err := EvalString(ctx, c, argv[0]); err {
+			case nil:
 				return err
+			case funcReturnErr:
+				break
 			}
 
 			c.Internal.Return.Range(func(key, value interface{}) bool {
-				k, ok := key.(string)
+				k, ok := key.(int)
 				if !ok {
 					return false
 				}
