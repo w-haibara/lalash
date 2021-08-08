@@ -572,6 +572,14 @@ func TestEvalString(t *testing.T) {
 			stderr: "",
 			err:    nil,
 		},
+		{
+			name:   "fn7",
+			expr:   `l-fn aaa {l-args}; aaa hello world`,
+			stdin:  "",
+			stdout: "hello\nworld\n",
+			stderr: "",
+			err:    nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

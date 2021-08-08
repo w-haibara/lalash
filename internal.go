@@ -242,6 +242,23 @@ func (cmd Command) setInternalUtilFamily() {
 			return nil
 		},
 	})
+
+	cmd.Internal.Cmds.Store("l-args", InternalCmd{
+		Usage: "l-args",
+		Fn: func(ctx context.Context, cmd Command, args string, argv ...string) error {
+			for i := 0; ; i++ {
+				if v, ok := cmd.Internal.Args.Load(i); ok {
+					if v, ok := v.(string); ok {
+						fmt.Fprintln(cmd.Stdout, v)
+					}
+				} else {
+					break
+				}
+			}
+
+			return nil
+		},
+	})
 }
 
 func (cmd Command) setInternalAliasFamily() {
