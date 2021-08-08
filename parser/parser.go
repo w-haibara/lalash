@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"text/scanner"
+
+	"github.com/k0kubun/pp"
 )
 
 const (
@@ -14,6 +16,8 @@ const (
 	SubstitutionToken = "substitution"
 	SeparateToken     = "separate"
 )
+
+var DEBUG = false
 
 type Token struct {
 	Kind string
@@ -97,6 +101,22 @@ func Parse(expr string) ([]Token, error) {
 	}
 
 	for i := 0; i < len(ret); i++ {
+		if strings.HasSuffix(ret[i].Val, "};") {
+			ret[i].Val = strings.TrimSuffix(ret[i].Val, ";")
+			ret = append(ret, Token{})
+			copy(ret[i+2:], ret[i+1:])
+			ret[i+1] = Token{Kind: SeparateToken}
+			i -= 1
+			continue
+		}
+	}
+
+	ret, err := ParenParser(ret, "{", "}", RawStringToken)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(ret); i++ {
 		if strings.HasSuffix(ret[i].Val, ";") {
 			ret[i].Val = strings.TrimSuffix(ret[i].Val, ";")
 
@@ -113,11 +133,6 @@ func Parse(expr string) ([]Token, error) {
 		}
 	}
 
-	ret, err := ParenParser(ret, "{", "}", RawStringToken)
-	if err != nil {
-		return nil, err
-	}
-
 	for i, v := range ret {
 		if v.Kind == RawStringToken {
 			continue
@@ -132,6 +147,10 @@ func Parse(expr string) ([]Token, error) {
 	ret, err = ParenParser(ret, "(", ")", SubstitutionToken)
 	if err != nil {
 		return nil, err
+	}
+
+	if DEBUG {
+		pp.Println(ret)
 	}
 
 	return ret, nil

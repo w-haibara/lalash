@@ -107,6 +107,30 @@ func TestEvalString(t *testing.T) {
 			stderr: "",
 			err:    nil,
 		},
+		{
+			name:   "raw-string literal2",
+			expr:   `l-echo {a;b}`,
+			stdin:  "",
+			stdout: "a;b\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "raw-string literal3",
+			expr:   `l-echo {a; c}`,
+			stdin:  "",
+			stdout: "a; c\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "raw-string literal4",
+			expr:   `l-echo {a ;c}`,
+			stdin:  "",
+			stdout: "a ;c\n",
+			stderr: "",
+			err:    nil,
+		},
 
 		/*
 			separate
@@ -228,6 +252,14 @@ func TestEvalString(t *testing.T) {
 			expr:   `l-eval {l-echo "(l-echo abc)"}`,
 			stdin:  "",
 			stdout: "abc\n",
+			stderr: "",
+			err:    nil,
+		},
+		{
+			name:   "substitution8",
+			expr:   `l-echo (l-echo aaa); l-echo bbb`,
+			stdin:  "",
+			stdout: "aaa\nbbb\n",
 			stderr: "",
 			err:    nil,
 		},
@@ -596,11 +628,11 @@ func TestEvalString(t *testing.T) {
 			e.Flush()
 
 			if got := stdout.String(); got != tt.stdout {
-				t.Errorf("\n=== Stdout ===\n%q\n---  want  ---\n%q\n--------------", got, tt.stdout)
+				t.Errorf("%q\n=== Stdout ===\n%q\n---  want  ---\n%q\n--------------", tt.expr, got, tt.stdout)
 			}
 
 			if got := stderr.String(); got != tt.stderr {
-				t.Errorf("\n=== Stderr ===\n%q\n---  want  ---\n%q\n--------------", got, tt.stderr)
+				t.Errorf("%q\n=== Stderr ===\n%q\n---  want  ---\n%q\n--------------", tt.expr, got, tt.stderr)
 			}
 
 			if tt.checkFile != nil {
