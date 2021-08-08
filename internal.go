@@ -470,7 +470,15 @@ func (cmd Command) setInternalEvalFamily() {
 			c.Internal.Var = new(sync.Map)
 			c.Internal.MutVar = new(sync.Map)
 
-			if err := EvalString(ctx, c, argv[0]); err != nil {
+			arg := ""
+			for _, v := range argv {
+				arg += v + " "
+			}
+			if strings.TrimSpace(arg) == "" {
+				return nil
+			}
+
+			if err := EvalString(ctx, c, arg); err != nil {
 				return err
 			}
 			return nil
