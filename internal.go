@@ -558,6 +558,11 @@ func (cmd Command) setInternalEvalFamily() {
 				break
 			}
 
+			cmd.Internal.Return.Range(func(key, value interface{}) bool {
+				cmd.Internal.Return.Delete(key)
+				return true
+			})
+
 			c.Internal.Return.Range(func(key, value interface{}) bool {
 				k, ok := key.(int)
 				if !ok {
